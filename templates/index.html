@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8" />
+
+<head>
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/styles.css') }}">
+</head>
+
+<body>
+<div id="charts">
+  <div id="sidebar" class="chart">
+    <!-- <select id="search"></select> -->
+
+    <div id="filterchart" class="chart">
+      <!-- <label><input id="cb2" type="checkbox" name="2" checked>§2 Media Cooperation&#160;</label>
+      <label><input id="cb4" type="checkbox" name="4" checked>§4 Funding&#160;</label>
+      <label><input id="cb31" type="checkbox" name="31" checked>§31 ORF-G&#160;</label> -->
+    </div>
+    <div id="barchart" class="chart">
+    </div>
+    <div id="topOrganisations" class="chart">
+      <table id="tableOrganisations" class="table"></table>
+    </div>
+    <div id="topMedia" class="chart">
+      <table id="tableMedia" class="table"></table>
+    </div>
+  </div>
+  <div id="mainview" class="chart">
+    <!-- <div id="progress"></div> -->
+    <!-- <label id="cb_scroll_label"><input id="cb_scroll" type="checkbox" name="Scroll">Enable scrolling&#160;</label> -->
+    <!-- <a id="back" href="javascript:back()" style=display:none><img src="{{ url_for('static',filename='img/back.png') }}"></a> -->
+    <a id="backToSankey" href="javascript:backToSankey()" style=display:none><img src="{{ url_for('static',filename='img/home.png') }}"></a>
+  </div>
+</div>
+
+<div id="tooltip" style=display:none>
+  <p><span id="tooltiptitle"></span></p>
+  <p><span id="tooltipsubtitle"></span></p>
+  <hr>
+  <p><span id="tooltipsum"></span></p>
+  <!-- <p><small><span id="tooltipsubtotal"></span><small></p> -->
+</div>
+
+<!--libraries-->
+<script src="{{ url_for('static', filename='lib/js/d3.min.js')}}"></script>
+<script src="{{ url_for('static', filename='lib/js/crossfilter.min.js')}}"></script>
+<script src="{{ url_for('static', filename='lib/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static', filename='lib/js/datatables.min.js')}}"></script>
+<script src="{{ url_for('static', filename='lib/js/thenBy.min.js')}}"></script>
+<!-- <script src="{{ url_for('static', filename='lib/js/select2.full.min.js')}}"></script> -->
+<!-- <script src="{{ url_for('static', filename='lib/js/viz.v1.2.1.min.js')}}"></script> -->
+<script src="{{ url_for('static', filename='lib/js/viz.v1.js')}}"></script>
+<script src="{{ url_for('static', filename='lib/js/spin.min.js')}}"></script>
+<!-- <link rel="stylesheet" href="{{ url_for('static',filename='lib/css/select2.min.css') }}"> -->
+<link rel="stylesheet" href="{{ url_for('static',filename='lib/css/datatables.min.css') }}">
+<!-- <link rel="stylesheet" href="{{ url_for('static',filename='lib/css/dc.css') }}"> -->
+
+<!--scripts-->
+<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
+<script src="{{ url_for('static', filename='js/init.js')}}"></script>
+<script src="{{ url_for('static', filename='js/sankey.js')}}"></script>
+<script src="{{ url_for('static', filename='js/barchart.js')}}"></script>
+<script src="{{ url_for('static', filename='js/barchart_law.js')}}"></script>
+<script src="{{ url_for('static', filename='js/annular.js')}}"></script>
+
+<script>
+</script>
+
+</html>
