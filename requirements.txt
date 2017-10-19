@@ -1,7 +1,7 @@
 Flask==0.12.2
 Flask-RESTful==0.3.6
 Flask-Script==2.0.5
-numpy==1.13.1+mkl
+numpy==1.13.1
 scipy==0.19.1
 pandas==0.20.3
 matplotlib==2.0.2
