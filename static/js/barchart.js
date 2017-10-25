@@ -39,10 +39,12 @@ function barchart(data){
     update();
     reset();
     hasSelections();
+    getSelections();
   }
   chart.update = update;
   chart.reset = reset;
   chart.hasSelections = hasSelections;
+  chart.getSelections = getSelections;
 
   function reset() {
     selections.clear();
@@ -50,6 +52,13 @@ function barchart(data){
 
   function hasSelections() {
     return selections.values().some(d=>d);
+  }
+
+  function getSelections() {
+    if(!hasSelections()) return selections.keys();
+    selArray = [];
+    selections.each(function(v,k){ if(v) selArray.push(k) });
+    return selArray;
   }
 
   function update(){

@@ -217,3 +217,10 @@ class BiCluster(object):
         global num_clusters
         num_clusters = num
         # return ""
+
+    def filterData(self, data, filters):
+        data_tmp = data.copy()
+        for f in filters:
+            data_tmp = data_tmp[data_tmp[f].isin(filters[f])]
+
+        return data_tmp

@@ -38,10 +38,12 @@ function barchart_law(data){
     update();
     reset();
     hasSelections();
+    getSelections();
   }
   chart.update = update;
   chart.reset = reset;
   chart.hasSelections = hasSelections;
+  chart.getSelections = getSelections;
 
   function reset() {
     selections.clear();
@@ -51,6 +53,12 @@ function barchart_law(data){
     return selections.values().some(d=>d);
   }
 
+  function getSelections() {
+    selArray = [];
+    selections.each(function(v,k){ if(v) selArray.push(k) });
+    return selArray;
+  }
+  
   function update(){
     data = bekanntgabeDim.group().reduceSum(function(d) { return d.EURO; }).top(Infinity).sort(function(a,b){ return a.key - b.key });
 

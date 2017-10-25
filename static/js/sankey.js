@@ -18,7 +18,7 @@ function sankey(data){
   d3.select("#mainview").select("svg").remove();
   var svg = d3.select("#mainview").append("svg").attr("width", width).attr("height", height).attr("id", "sankey");
   var g = svg.append("g").attr("transform","translate("+(width/3)+",40)");
-  console.log(data)
+  // console.log(data)
 // data_ = data.slice()
   var bp=viz.bP()
       .dataComplete(data)
@@ -222,7 +222,7 @@ function sankey(data){
           .style("fill-opacity", 0)
           .on("click", function(e){
             spinner.spin(document.getElementById("mainview"));
-            d3.json("/removeSubClusters/"+cID, function(f){
+            d3.json("removeSubClusters/"+cID, function(f){
               while(openClusters[openClusters.length-1] != oldcID){ g.select("#cb"+openClusters.pop().replace(/\./g,'')).remove(); }
               update(f, true);
               spinner.stop();
@@ -506,8 +506,8 @@ function sankey(data){
     selected = false;
     openClusters.push(d.key);
     spinner.spin(document.getElementById("mainview"));
-    d3.json("/getSubClusters/"+d.key, function(f){
-      console.log(f)
+    d3.json("getSubClusters/"+d.key, function(f){
+      // console.log(f)
       spinner.stop();
       // openClusters.each(function(g){ f.data.push([g+"#Cluster", g+"#Cluster", 0]); });
       update(f);
@@ -531,7 +531,7 @@ function sankey(data){
         .text(cID)
         .on("click", function(e){
           spinner.spin(document.getElementById("mainview"));
-          d3.json("/removeSubClusters/"+openClusters[i+1], function(f){
+          d3.json("removeSubClusters/"+openClusters[i+1], function(f){
             while(openClusters[openClusters.length-1] != cID){ openClusters.pop(); }
             update(f);
 

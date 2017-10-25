@@ -16,7 +16,7 @@ var rechtstraegerTable, mediumTable;
 var allClusters;
 
 d3.queue()
-    .defer(d3.json, "/getData")
+    .defer(d3.json, "getData")
     // .defer(function(d){ d3.json("/setNumClusters").header("Content-Type", "application/json").post(9,function(e){return});},  true)
     // .defer(d3.json, "/getClusters")
     .await(makeGraphs);
@@ -37,13 +37,14 @@ function makeGraphs(error, data/*, clusters*/) {
 
   var s = d3.scaleLinear().range([2,9]).domain([400,1100])
   var num_clusters = Math.round(s(document.getElementById("mainview").offsetHeight));
-  var data_filtered = bekanntgabeDim.filterFunction(function(f) { return (f==2 || f==4); }).top(Infinity);
+  // var data_filtered = bekanntgabeDim.filterFunction(function(f) { return (f==2 || f==4); }).top(Infinity);
+  var data_filtered = {BEKANNTGABE: [2,4]};
 
-  d3.json("/setNumClusters")
+  d3.json("setNumClusters")
     .header("Content-Type", "application/json")
     .post(num_clusters, function(e){
 
-      d3.json("/getClusters")
+      d3.json("getClusters")
         .header("Content-Type", "application/json")
         .post(JSON.stringify(data_filtered), function(d){
           console.log(d);
@@ -250,7 +251,7 @@ function resetAll(data){
 
 function updateAll(data){
   if(data != null){
-    console.log("Clusters",data.clusters)
+    // console.log("Clusters",data.clusters)
     sankeychart.update(data);
     // createSankey(data);
     // histogram(data);
@@ -268,11 +269,12 @@ function filterData(data){
   // console.log(data)
   spinner.spin(document.getElementById("mainview"));
   if(document.getElementById("annular") == null){
+    var data_filtered = {BEKANNTGABE: barchart_law.getSelections(), QUARTAL: barchart.getSelections()};
     // if(barchart.hasSelections() || barchart_law.hasSelections()){
-      d3.json("/getClusters")
+      d3.json("getClusters")
         .header("Content-Type", "application/json")
-        .post(JSON.stringify(data), function(d){
-          console.log(d);
+        .post(JSON.stringify(data_filtered), function(d){
+          // console.log(d);
           sankeychart.openClustersF(["Home"]);
           updateAll(d);
           spinner.stop();

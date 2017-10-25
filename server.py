@@ -27,7 +27,9 @@ def getClusters():
 		return json.dumps(cluster_idcs)
 	else:
 		json_dict = request.get_json()
-		cluster_idcs = BiCluster().cluster(pd.DataFrame(json_dict))
+		filteredData = BiCluster().filterData(data, json_dict)
+		# cluster_idcs = BiCluster().cluster(pd.DataFrame(json_dict))
+		cluster_idcs = BiCluster().cluster(filteredData)
 		return json.dumps(cluster_idcs)
 
 @app.route("/getSubClusters/<cID>", methods=['GET'])
