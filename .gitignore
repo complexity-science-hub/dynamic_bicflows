@@ -1,4 +1,5 @@
 #folders
+/__pycache__/
 /bin/
 /include/
 /lib/
