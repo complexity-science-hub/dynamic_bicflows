@@ -38,6 +38,7 @@ function makeGraphs(error, data/*, clusters*/) {
   var s = d3.scaleLinear().range([2,9]).domain([400,1100])
   var num_clusters = Math.round(s(document.getElementById("mainview").offsetHeight));
   // var data_filtered = bekanntgabeDim.filterFunction(function(f) { return (f==2 || f==4); }).top(Infinity);
+  bekanntgabeDim.filterFunction(function(f) { return (f==2 || f==4); });
   var data_filtered = {BEKANNTGABE: [2,4]};
 
   d3.json("setNumClusters")
