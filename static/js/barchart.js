@@ -1,4 +1,4 @@
-function barchart(data){
+function createBarchart(data){
   var margin = {top: 20, right: 20, bottom: 50, left: 50},
       width = document.getElementById("barchart").offsetWidth - margin.left - margin.right,
       height = document.getElementById("barchart").offsetHeight - margin.top - margin.bottom;

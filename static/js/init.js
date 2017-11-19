@@ -53,8 +53,8 @@ function makeGraphs(error, data/*, clusters*/) {
           spinner.stop();
 
           createTables();
-          barchart = barchart();
-          barchart_law = barchart_law();
+          barchart = createBarchart();
+          barchart_law = createBarchart_law();
           sankeychart = sankey(d);
           updateAll();
         });
@@ -399,4 +399,16 @@ function updateToolTip(e, title, sum, subtotal) {
   // $("#tooltipsubtotal").text(subtotal);
   $("#tooltipsum").text(sum);
   $("#tooltip").show();
+}
+
+function changeData(i){
+  var route = (i==0) ? "getData" : "getDummyData";
+
+  d3.select("#mainview").select("svg").remove();
+  d3.select("#filterchart").select("svg").remove();
+  d3.select("#barchart").select("svg").remove();
+
+  d3.queue()
+      .defer(d3.json, route)
+      .await(makeGraphs);
 }

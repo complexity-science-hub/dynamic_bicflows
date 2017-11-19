@@ -1,4 +1,4 @@
-function barchart_law(data){
+function createBarchart_law(data){
   var margin = {top: 20, right: 20, bottom: 25, left: 50},
       width = document.getElementById("filterchart").offsetWidth - margin.left - margin.right,
       height = document.getElementById("filterchart").offsetHeight - margin.top - margin.bottom;
@@ -58,7 +58,7 @@ function barchart_law(data){
     selections.each(function(v,k){ if(v) selArray.push(k) });
     return selArray;
   }
-  
+
   function update(){
     data = bekanntgabeDim.group().reduceSum(function(d) { return d.EURO; }).top(Infinity).sort(function(a,b){ return a.key - b.key });
 

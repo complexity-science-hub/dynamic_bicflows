@@ -18,6 +18,12 @@ def getData():
 	data = pd.read_table("static/data/data_20123-20172.csv",";")
 	return data.to_json(orient='records')
 
+@app.route("/getDummyData", methods=['GET'])
+def getDummyData():
+	global data
+	data = pd.read_table("static/data/dummy.csv",";")
+	return data.to_json(orient='records')
+
 @app.route("/getClusters", methods=['GET', 'POST'])
 def getClusters():
 	if request.method == 'GET':
