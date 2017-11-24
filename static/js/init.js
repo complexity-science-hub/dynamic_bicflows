@@ -15,6 +15,14 @@ var searchbar;
 var rechtstraegerTable, mediumTable;
 var allClusters;
 
+d3.select("html").on("keydown", function(d){
+  kc = d3.event.keyCode;
+  if(kc == 49)
+    changeData(0);
+  if(kc == 50)
+   changeData(1);
+ })
+
 d3.queue()
     .defer(d3.json, "getData")
     // .defer(function(d){ d3.json("/setNumClusters").header("Content-Type", "application/json").post(9,function(e){return});},  true)
@@ -411,4 +419,7 @@ function changeData(i){
   d3.queue()
       .defer(d3.json, route)
       .await(makeGraphs);
+
+  rechtstraegerTable.columns(0).header().to$().text("User")
+  mediumTable.columns(0).header().to$().text("Movie")
 }
