@@ -54,16 +54,17 @@ function createBarchart_law(data){
   }
 
   function getSelections() {
+    if(!hasSelections()) return selections.keys();
     selArray = [];
     selections.each(function(v,k){ if(v) selArray.push(k) });
     return selArray;
   }
 
   function update(){
-    data = bekanntgabeDim.group().reduceSum(function(d) { return d.EURO; }).top(Infinity).sort(function(a,b){ return a.key - b.key });
+    data = bekanntgabeDim.group().reduceSum(function(d) { return getValue(d); }).top(Infinity).sort(function(a,b){ return a.key - b.key });
 
     if(selections.empty()){
-      data.forEach(function(d){ selections.set(d.key, (d.key==2 || d.key ==4)) });
+      data.forEach(function(d){ selections.set(d.key, true) });
     }
 
     // Update axes

@@ -12,17 +12,55 @@ html, body {
   height: inherit;
 }
 
-.chart {
+.with-border {
   position: relative;
   margin: 0.25%;
   margin-right: 0.5%;
   border: 1px solid darkgray;
 }
 
-#sidebar {width:20%; height:inherit; float:left;}
+#sidebar {
+  width:20%; height:inherit; float:left;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
 #mainview {width:78%; height:inherit; float:right;overflow-y:hidden;overflow-x:hidden;border: 0px}
 #filterchart { height:13%; }
-#barchart { height:22%; }
+.barchart {
+  height:20vh;
+  overflow: hidden;
+  transition: height 0.5s;
+}
+
+.barchart.barchart-collapsed {
+  height:0px;
+}
+
+.barchart-header {
+  background-color: #EEEEEE;
+  padding: 5px;
+  cursor: pointer;
+  padding-left: 20px;
+}
+
+.barchart-header::before {
+  position: absolute;
+  content: "▼ ";
+  margin-left: -15px;
+}
+
+.barchart-header.barchart-header-collapsed::before {
+  position: absolute;
+  content: "▶ ";
+  margin-left: -13px;
+  margin-top: -3px;
+}
+
+.barchart-header.filter-active {
+  background-color: brown;
+  color: white;
+}
+
 #topOrganisations { height:32%; }
 #topMedia { height:32%; }
 
@@ -30,10 +68,22 @@ html, body {
   table-layout:fixed;
   width: 100% !important;
 }
+
 #tableMedia {
   table-layout:fixed;
   width: 100% !important;
 }
+
+#tableOrganisations td,
+#tableOrganisations th,
+#tableMedia td,
+#tableMedia th {
+  width: auto !important;
+  white-space: normal;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 .dataTables_scrollHead{
   /*max-height: 4vh !important;*/
 }

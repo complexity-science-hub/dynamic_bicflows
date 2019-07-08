@@ -285,7 +285,7 @@ function sankey(data){
     var orgs;
     var sum;
     if(d.part == "primary"){
-      rechtstraegerDim.filter(d.elements[0].key);
+      firstGroupDim.filter(d.elements[0].key);
 
       var mList = {};
       bp.histogramData().entries().forEach(function(e){
@@ -296,20 +296,20 @@ function sankey(data){
       })
       mList = d3.map(mList);
 
-      mediumDim.filterFunction(function(e){ return mList.has(e); });
+      secondGroupDim.filterFunction(function(e){ return mList.has(e); });
       orgs = d3.nest()
-        .key(function(e) { return e.MEDIUM_MEDIENINHABER; })
-        .rollup(function(e) { return d3.sum(e, function(f){ if(f.EURO >= 1) return f.EURO}); })
-        .entries(mediumDim.top(Infinity))
+        .key(function(e) { return getSecond(e); })
+        .rollup(function(e) { return d3.sum(e, function(f){ if(getValue(f) >= 1) return getValue(f);}); })
+        .entries(secondGroupDim.top(Infinity))
 
       bp.showOverlay(d, orgs, d.part);
       sum = d3.sum(orgs, function(e){ return e.value });
       orgs = d3.set(orgs, function(e){ return e.key });
-      rechtstraegerDim.filterAll();
-      mediumDim.filterAll();
+      firstGroupDim.filterAll();
+      secondGroupDim.filterAll();
     }
     else{
-      mediumDim.filter(d.elements[0].key);
+      secondGroupDim.filter(d.elements[0].key);
 
       var mList = {};
       bp.histogramData().entries().forEach(function(e){
@@ -320,17 +320,17 @@ function sankey(data){
       })
       mList = d3.map(mList);
 
-      rechtstraegerDim.filterFunction(function(e){ return mList.has(e); });
+      firstGroupDim.filterFunction(function(e){ return mList.has(e); });
       orgs = d3.nest()
-        .key(function(e) { return e.RECHTSTRAEGER; })
-        .rollup(function(e) { return d3.sum(e, function(f){ if(f.EURO >= 1) return f.EURO}); })
-        .entries(rechtstraegerDim.top(Infinity))
+        .key(function(e) { return getFirst(e); })
+        .rollup(function(e) { return d3.sum(e, function(f){ if(getValue(f) >= 1) return getValue(f);}); })
+        .entries(firstGroupDim.top(Infinity))
 
       bp.showOverlay(d, orgs, d.part);
       sum = d3.sum(orgs, function(e){ return e.value });
       orgs = d3.set(orgs, function(e){ return e.key });
-      mediumDim.filterAll();
-      rechtstraegerDim.filterAll();
+      secondGroupDim.filterAll();
+      firstGroupDim.filterAll();
     }
 
     var sel = d.elements[0].key;
@@ -543,32 +543,32 @@ function sankey(data){
 
   function invokeTableSelection(d){
     if(d.part == "primary"){
-      mediumDim.filterAll();
-      rechtstraegerDim.filter(d.elements[0].key);
-      var data = mediumDim.group().reduceSum(function(d){ return d.EURO; }).top(Infinity);
+      secondGroupDim.filterAll();
+      firstGroupDim.filter(d.elements[0].key);
+      var data = secondGroupDim.group().reduceSum(function(d){ return getValue(d); }).top(Infinity);
       data = data.filter(function(d){ return d.value >= 1; });
       updateAll();
 
-      var row = rechtstraegerTable.row("#"+d.elements[0].key.replace(/[()., ]/g,"")).data();
-      var info = {name: row[0], sum: format(row[1]), type: "Rechtsträger"};
+      var row = firstGroupTable.row("#"+d.elements[0].key.replace(/[()., ]/g,"")).data();
+      var info = {name: row[0], sum: format(row[1]), type: firstGroupIndex};
       annularchart = annular(data, info);
 
-      rechtstraegerTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
-      setTimeout(function(){ rechtstraegerTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
+      firstGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
+      setTimeout(function(){ firstGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
     }
     else{
-      rechtstraegerDim.filterAll();
-      mediumDim.filter(d.elements[0].key);
-      var data = rechtstraegerDim.group().reduceSum(function(d){ return d.EURO; }).top(Infinity);
+      firstGroupDim.filterAll();
+      secondGroupDim.filter(d.elements[0].key);
+      var data = firstGroupDim.group().reduceSum(function(d){ return getValue(d); }).top(Infinity);
       data = data.filter(function(d){ return d.value >= 1; });
       updateAll();
 
-      var row = mediumTable.row("#"+d.elements[0].key.replace(/[()., ]/g,"")).data();
-      var info = {name: row[0], sum: format(row[1]), type: "Medium"};
+      var row = secondGroupTable.row("#"+d.elements[0].key.replace(/[()., ]/g,"")).data();
+      var info = {name: row[0], sum: format(row[1]), type: secondGroupIndex};
       annularchart = annular(data, info);
 
-      mediumTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
-      setTimeout(function(){ mediumTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
+      secondGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
+      setTimeout(function(){ secondGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
     }
   }
 
@@ -578,18 +578,18 @@ function sankey(data){
     if(selectedHistogram){
       var k = selectedHistogram.elements[0].key;
       if(selectedHistogram.part == "primary"){
-        rechtstraegerTable.row("#"+k.replace(/[()., ]/g,"")).scrollTo();
-        setTimeout(function(){ $(rechtstraegerTable.row("#"+k.replace(/[()., ]/g,"")).node()).toggleClass('selected'); }, delay);
-        // $(rechtstraegerTable.row("#"+selectedHistogramKey.replace(/[()., ]/g,"")).node()).toggleClass('selected');
+        firstGroupTable.row("#"+k.replace(/[()., ]/g,"")).scrollTo();
+        setTimeout(function(){ $(firstGroupTable.row("#"+k.replace(/[()., ]/g,"")).node()).toggleClass('selected'); }, delay);
+        // $(firstGroupTable.row("#"+selectedHistogramKey.replace(/[()., ]/g,"")).node()).toggleClass('selected');
 
-        // $("#tableOrganisations").find("tbody tr:eq("+rechtstraegerTable.rows("#"+selectedHistogramKey)[0][0]+")").toggleClass('selected');
+        // $("#tableOrganisations").find("tbody tr:eq("+firstGroupTable.rows("#"+selectedHistogramKey)[0][0]+")").toggleClass('selected');
       }
       else{
-        mediumTable.row("#"+k.replace(/[()., ]/g,"")).scrollTo();
-        setTimeout(function(){ $(mediumTable.row("#"+k.replace(/[()., ]/g,"")).node()).toggleClass('selected'); }, delay);
-        // $(mediumTable.row("#"+selectedHistogramKey.replace(/[()., ]/g,"")).node()).toggleClass('selected');
+        secondGroupTable.row("#"+k.replace(/[()., ]/g,"")).scrollTo();
+        setTimeout(function(){ $(secondGroupTable.row("#"+k.replace(/[()., ]/g,"")).node()).toggleClass('selected'); }, delay);
+        // $(secondGroupTable.row("#"+selectedHistogramKey.replace(/[()., ]/g,"")).node()).toggleClass('selected');
 
-        // $("#tableMedia").find("tbody tr:eq("+mediumTable.rows("#"+selectedHistogramKey)[0][0]+")").toggleClass('selected');
+        // $("#tableMedia").find("tbody tr:eq("+secondGroupTable.rows("#"+selectedHistogramKey)[0][0]+")").toggleClass('selected');
       }
     }
   }

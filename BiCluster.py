@@ -59,8 +59,8 @@ class BiCluster(object):
 
         # ret = []
         # wel = weighted_edge_list.copy()
-        # wel["RECHTSTRAEGER"].update(wel["RECHTSTRAEGER"].map(rowMap))
-        # wel["MEDIUM_MEDIENINHABER"].update(wel["MEDIUM_MEDIENINHABER"].map(colMap))
+        # wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap))
+        # wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap))
 
         rowLabelSet = set([str(clusterID)+"."+str(x) for x in subModel.row_labels_])
         colLabelSet = set([str(clusterID)+"."+str(x) for x in subModel.column_labels_])
@@ -72,17 +72,17 @@ class BiCluster(object):
         wel = weighted_edge_list.copy()
         # print(rowLabelSet)
 
-        wel["RECHTSTRAEGER"].update(wel["RECHTSTRAEGER"].map(rowMap2))
-        wel["MEDIUM_MEDIENINHABER"].update(wel["MEDIUM_MEDIENINHABER"].map(colMap2))
+        wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap2))
+        wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap2))
 
-        idc = wel[(wel["RECHTSTRAEGER"].astype(str).str[:len(clusterID)] != clusterID) & (wel["MEDIUM_MEDIENINHABER"].astype(str).str[:len(clusterID)] != clusterID)].index
+        idc = wel[(wel[firstGroupIndex].astype(str).str[:len(clusterID)] != clusterID) & (wel[secondGroupIndex].astype(str).str[:len(clusterID)] != clusterID)].index
         wel = wel.drop(idc)
 
         wel2 = weighted_edge_list.copy()
         wel2 = wel2.drop(idc)
-        row_sums_map2 = wel2.groupby(by = ["RECHTSTRAEGER"]).sum().to_dict()["EURO"]
+        row_sums_map2 = wel2.groupby(by = [firstGroupIndex]).sum().to_dict()[valueIndex]
         row_sums_map2 = {k:float(v) for k,v in row_sums_map2.items()}
-        column_sums_map2 = wel2.groupby(by = ["MEDIUM_MEDIENINHABER"]).sum().to_dict()["EURO"]
+        column_sums_map2 = wel2.groupby(by = [secondGroupIndex]).sum().to_dict()[valueIndex]
         column_sums_map2 = {k:float(v) for k,v in column_sums_map2.items()}
 
         ret = []
@@ -124,17 +124,17 @@ class BiCluster(object):
 
         wel = weighted_edge_list.copy()
 
-        wel["RECHTSTRAEGER"].update(wel["RECHTSTRAEGER"].map(rowMap2))
-        wel["MEDIUM_MEDIENINHABER"].update(wel["MEDIUM_MEDIENINHABER"].map(colMap2))
+        wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap2))
+        wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap2))
 
-        idc = wel[(wel["RECHTSTRAEGER"].astype(str).str[:len(smID)] != smID) & (wel["MEDIUM_MEDIENINHABER"].astype(str).str[:len(smID)] != smID)].index
+        idc = wel[(wel[firstGroupIndex].astype(str).str[:len(smID)] != smID) & (wel[secondGroupIndex].astype(str).str[:len(smID)] != smID)].index
         wel = wel.drop(idc)
 
         wel2 = weighted_edge_list.copy()
         wel2 = wel2.drop(idc)
-        row_sums_map2 = wel2.groupby(by = ["RECHTSTRAEGER"]).sum().to_dict()["EURO"]
+        row_sums_map2 = wel2.groupby(by = [firstGroupIndex]).sum().to_dict()[valueIndex]
         row_sums_map2 = {k:float(v) for k,v in row_sums_map2.items()}
-        column_sums_map2 = wel2.groupby(by = ["MEDIUM_MEDIENINHABER"]).sum().to_dict()["EURO"]
+        column_sums_map2 = wel2.groupby(by = [secondGroupIndex]).sum().to_dict()[valueIndex]
         column_sums_map2 = {k:float(v) for k,v in column_sums_map2.items()}
 
         ret = []
@@ -160,16 +160,29 @@ class BiCluster(object):
         # return {"data": ret, "clusters": clusters, "rows": [[k,v] for k,v in row_sums_map.items()], "columns": [[k,v] for k,v in column_sums_map.items()]}
 
     def cluster(self, data):
-        global weighted_edge_list, matrix, model, row_order, column_order, rowMap, colMap, subModels, row_sums_map, column_sums_map
+        global weighted_edge_list, firstGroupIndex, secondGroupIndex, valueIndex, matrix, model, row_order, column_order, rowMap, colMap, subModels, row_sums_map, column_sums_map
         subModels = {}
-        # num_clusters = 9
-        weighted_edge_list = data[["RECHTSTRAEGER","MEDIUM_MEDIENINHABER","EURO"]]
-        weighted_edge_list = weighted_edge_list.groupby(by = ["RECHTSTRAEGER", "MEDIUM_MEDIENINHABER"]).sum().reset_index()
+        print("seawas")
+        print(data)
+        print(vars(data))
 
-        G = nx.from_pandas_dataframe(weighted_edge_list,"RECHTSTRAEGER","MEDIUM_MEDIENINHABER","EURO", create_using=nx.DiGraph())
-        row_order = np.sort(np.unique(weighted_edge_list["RECHTSTRAEGER"]))
-        column_order = np.sort(np.unique(weighted_edge_list["MEDIUM_MEDIENINHABER"]))
-        matrix_real = biadjacency_matrix(G, row_order, column_order=column_order, weight="EURO")
+        dataKeys = data.keys();
+        firstGroupIndex = dataKeys[0]
+        secondGroupIndex = dataKeys[len(dataKeys) - 2]
+        valueIndex = dataKeys[len(dataKeys) - 1]
+
+        print("the keys: ")
+        print(firstGroupIndex)
+        print(secondGroupIndex)
+        print(valueIndex)
+        # num_clusters = 9
+        weighted_edge_list = data[[firstGroupIndex,secondGroupIndex,valueIndex]]
+        weighted_edge_list = weighted_edge_list.groupby(by = [firstGroupIndex, secondGroupIndex]).sum().reset_index()
+
+        G = nx.from_pandas_dataframe(weighted_edge_list,firstGroupIndex,secondGroupIndex,valueIndex, create_using=nx.DiGraph())
+        row_order = np.sort(np.unique(weighted_edge_list[firstGroupIndex]))
+        column_order = np.sort(np.unique(weighted_edge_list[secondGroupIndex]))
+        matrix_real = biadjacency_matrix(G, row_order, column_order=column_order, weight=valueIndex)
         matrix = matrix_real.toarray()
         row_sums = matrix.sum(axis=1).round(2)
         row_sums_map = dict(zip(row_order, row_sums))
@@ -187,8 +200,8 @@ class BiCluster(object):
         ret = []
 
         wel = weighted_edge_list.copy()
-        wel["RECHTSTRAEGER"].update(wel["RECHTSTRAEGER"].map(rowMap))
-        wel["MEDIUM_MEDIENINHABER"].update(wel["MEDIUM_MEDIENINHABER"].map(colMap))
+        wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap))
+        wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap))
         ret = wel.as_matrix().tolist()
 
         clusters = self.getElementsbyCluster()

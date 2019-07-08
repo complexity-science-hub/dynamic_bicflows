@@ -15,7 +15,10 @@ def output():
 @app.route("/getData", methods=['GET'])
 def getData():
 	global data
-	data = pd.read_table("static/data/data_20123-20172.csv",";")
+	#data = pd.read_table("static/data/data_20123-20172.csv",";")
+	data = pd.read_table("static/data/test.csv", ";")
+	#data = pd.read_table("static/data/data_20123-20164.csv", ";")
+	#data = pd.read_table("static/data/michi_data_mod.csv", ";")
 	return data.to_json(orient='records')
 
 @app.route("/getDummyData", methods=['GET'])

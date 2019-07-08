@@ -277,33 +277,33 @@ function annular(data, info){
   }
 
   function invokeTableSelection(d){
-    if(info.type == "Medium"){
-      mediumDim.filterAll();
-      rechtstraegerDim.filter(d.data.name);
-      var data = mediumDim.group().reduceSum(function(d){ return d.EURO; }).top(Infinity);
+    if(info.type == secondGroupIndex){
+      secondGroupDim.filterAll();
+      firstGroupDim.filter(d.data.name);
+      var data = secondGroupDim.group().reduceSum(function(d){ return getValue(d); }).top(Infinity);
       data = data.filter(function(d){ return d.value >= 1; });
       updateAll();
 
-      var row = rechtstraegerTable.row("#"+d.data.name.replace(/[()., ]/g,"")).data();
-      var newInfo = {name: row[0], sum: format(row[1]), type: "Rechtsträger"};
+      var row = firstGroupTable.row("#"+d.data.name.replace(/[()., ]/g,"")).data();
+      var newInfo = {name: row[0], sum: format(row[1]), type: firstGroupIndex};
       annularchart = annular(data, newInfo);
 
-      rechtstraegerTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
-      setTimeout(function(){ rechtstraegerTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
+      firstGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
+      setTimeout(function(){ firstGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
     }
     else{
-      rechtstraegerDim.filterAll();
-      mediumDim.filter(d.data.name);
-      var data = rechtstraegerDim.group().reduceSum(function(d){ return d.EURO; }).top(Infinity);
+      firstGroupDim.filterAll();
+      secondGroupDim.filter(d.data.name);
+      var data = firstGroupDim.group().reduceSum(function(d){ return getValue(d); }).top(Infinity);
       data = data.filter(function(d){ return d.value >= 1; });
       updateAll();
 
-      var row = mediumTable.row("#"+d.data.name.replace(/[()., ]/g,"")).data();
-      var newInfo = {name: row[0], sum: format(row[1]), type: "Medium"};
+      var row = secondGroupTable.row("#"+d.data.name.replace(/[()., ]/g,"")).data();
+      var newInfo = {name: row[0], sum: format(row[1]), type: secondGroupIndex};
       annularchart = annular(data, newInfo);
 
-      mediumTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
-      setTimeout(function(){ mediumTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
+      secondGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).scrollTo();
+      setTimeout(function(){ secondGroupTable.row("#"+row[0].replace(/[()., ]/g,"")).select(); }, delay);
     }
   }
 

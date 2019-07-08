@@ -1,9 +1,35 @@
-function createBarchart(data){
-  var margin = {top: 20, right: 20, bottom: 50, left: 50},
-      width = document.getElementById("barchart").offsetWidth - margin.left - margin.right,
-      height = document.getElementById("barchart").offsetHeight - margin.top - margin.bottom;
+function createBarchart(dimension, name){
+  var rotateXLabelThreshold = 3;
 
-  var svg = d3.select("#barchart").append("svg")
+  var barChartContainer = d3.select("#filtercharts").append("div");
+  barChartContainer.classed("with-border", true);
+
+  let barChartHead = barChartContainer.append("div").text(name);
+  barChartHead.classed("barchart-header", true);
+
+  let barChartBody = barChartContainer.append("div");
+  barChartBody.classed("barchart", true);
+
+  barChartHead.on("click", function(d) {
+    let collapsed =! barChartBody.classed("barchart-collapsed");
+
+    barChartBody.classed("barchart-collapsed", collapsed);
+    barChartHead.classed("barchart-header-collapsed", collapsed);
+  });
+
+  var margin = {top: 20, right: 20, bottom: 25, left: 50};
+
+  if (isRotateXLabels()) {
+    margin.bottom = 50;
+  }
+
+  var width = barChartBody.node().offsetWidth - margin.left - margin.right,
+      height = barChartBody.node().offsetHeight - margin.top - margin.bottom;
+
+  barChartBody.classed("barchart-collapsed", true);
+  barChartHead.classed("barchart-header-collapsed", true);
+
+  var svg = barChartBody.append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom);
 
@@ -13,7 +39,7 @@ function createBarchart(data){
   var g = svg.append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var xAxis = d3.axisBottom(x).tickFormat(formatYear);
+  var xAxis = d3.axisBottom(x).tickFormat(function(d) {return d; });
   var yAxis = d3.axisLeft(y).tickArguments([5]).tickFormat(function(d) { return (d.toFixed(2)/1000000); });
   function formatYear(d){ k=""+d; yr = k.substr(0,k.length-1); qt = k.charAt(k.length-1); return yr+" Q"+qt; };
 
@@ -31,7 +57,7 @@ function createBarchart(data){
     .append("text")
       .attr("dx", "-0.5em")
       .attr("dy", "-0.5em")
-      .attr("text-anchor", "end")
+      .attr("text-anchor", "middle")
       .style("fill", "#000")
       .text("Mio €");
 
@@ -41,6 +67,7 @@ function createBarchart(data){
     hasSelections();
     getSelections();
   }
+
   chart.update = update;
   chart.reset = reset;
   chart.hasSelections = hasSelections;
@@ -62,7 +89,7 @@ function createBarchart(data){
   }
 
   function update(){
-    data = quartalDim.group().reduceSum(function(d) { return d.EURO; }).top(Infinity).sort(function(a,b){ return a.key - b.key });
+    data = dimension.group().reduceSum(function(d) { return getValue(d); }).top(Infinity).sort(function(a,b){ return a.key - b.key });
 
     if(selections.empty())
       data.forEach(function(d){ selections.set(d.key, false) });
@@ -75,21 +102,23 @@ function createBarchart(data){
       .call(xAxis)
       .attr("transform", "translate(0," + height + ")")
     .selectAll("text")
-      .style("text-anchor", "end")
+      .style("text-anchor", "middle")
       .style("fill", function(d) { return (selections.get(d)) ? "brown" : "black"; })
-      .attr("dx", "-.8em")
-      .attr("dy", ".15em")
-      .attr("transform", "rotate(-45)")
       .on("click", function(d) {
         selections.set(d, !selections.get(d));
 
         if(document.getElementById("annular") != null)
           wasFiltered = true;
 
-        if(!selections.values().every(f => f==false))
-          data_filtered = quartalDim.filterFunction(function(f) { return selections.get(f) && f; }).top(Infinity);
-        else
-          data_filtered = quartalDim.filterAll().top(Infinity);
+        if(!selections.values().every(f => f==false)) {
+          data_filtered = dimension.filterFunction(function (f) {
+            return selections.get(f) && f;
+          }).top(Infinity);
+          barChartHead.classed("filter-active", true);
+        }else {
+          data_filtered = dimension.filterAll().top(Infinity);
+          barChartHead.classed("filter-active", false);
+        }
 
         filterData(data_filtered);
       })
@@ -101,6 +130,14 @@ function createBarchart(data){
         if(!selections.get(d))
           d3.select(this).style("fill", "black")
       });
+
+    if (isRotateXLabels()) {
+      g.select(".axis.axis--x").selectAll("text")
+      .attr("dx", "-.8em")              // do
+      .attr("dy", ".15em")              // this
+      .attr("transform", "rotate(-45)") // depending on length of label
+      .style("text-anchor", "end")
+    }
 
     g.select(".axis.axis--y")
       .call(yAxis);
@@ -129,10 +166,15 @@ function createBarchart(data){
         if(document.getElementById("annular") != null)
           wasFiltered = true;
 
-        if(!selections.values().every(f => f==false))
-          data_filtered = quartalDim.filterFunction(function(f) { return selections.get(f) && f; }).top(Infinity);
-        else
-          data_filtered = quartalDim.filterAll().top(Infinity);
+        if(!selections.values().every(f => f==false)) {
+          data_filtered = dimension.filterFunction(function (f) {
+            return selections.get(f) && f;
+          }).top(Infinity);
+          barChartHead.classed("filter-active", true);
+        } else {
+          data_filtered = dimension.filterAll().top(Infinity);
+          barChartHead.classed("filter-active", false);
+        }
 
         filterData(data_filtered);
       })
@@ -150,5 +192,20 @@ function createBarchart(data){
       // Remove omitted bars
       bars.exit().remove();
     }
+
+    function isRotateXLabels() {
+      data = dimension.group().reduceSum(function (d) {
+        return getValue(d);
+      }).top(Infinity);
+
+      maxKeyLength = 0;
+
+      data.forEach(function(record) {
+        maxKeyLength = Math.max(maxKeyLength, record.key.toString().length);
+      });
+
+      return maxKeyLength > rotateXLabelThreshold;
+    }
+
     return chart;
 }

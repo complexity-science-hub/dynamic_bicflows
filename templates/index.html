@@ -8,24 +8,26 @@
 
 <body>
 <div id="charts">
-  <div id="sidebar" class="chart">
+  <div id="sidebar" class="with-border">
     <!-- <select id="search"></select> -->
 
-    <div id="filterchart" class="chart">
+      <div id="filtercharts"></div>
+
+    <!--<div id="filterchart" class="with-border">-->
       <!-- <label><input id="cb2" type="checkbox" name="2" checked>§2 Media Cooperation&#160;</label>
       <label><input id="cb4" type="checkbox" name="4" checked>§4 Funding&#160;</label>
       <label><input id="cb31" type="checkbox" name="31" checked>§31 ORF-G&#160;</label> -->
-    </div>
-    <div id="barchart" class="chart">
-    </div>
-    <div id="topOrganisations" class="chart">
+    <!--</div>-->
+    <!--<div id="barchart" class="with-border">
+    </div>-->
+    <div id="topOrganisations" class="with-border">
       <table id="tableOrganisations" class="table"></table>
     </div>
-    <div id="topMedia" class="chart">
+    <div id="topMedia" class="with-border">
       <table id="tableMedia" class="table"></table>
     </div>
   </div>
-  <div id="mainview" class="chart">
+  <div id="mainview" class="mainview">
     <!-- <div id="progress"></div> -->
     <!-- <label id="cb_scroll_label"><input id="cb_scroll" type="checkbox" name="Scroll">Enable scrolling&#160;</label> -->
     <!-- <a id="back" href="javascript:back()" style=display:none><img src="{{ url_for('static',filename='img/back.png') }}"></a> -->
@@ -63,7 +65,5 @@
 <script src="{{ url_for('static', filename='js/barchart_law.js')}}"></script>
 <script src="{{ url_for('static', filename='js/annular.js')}}"></script>
 
-<script>
-</script>
-
+</body>
 </html>
