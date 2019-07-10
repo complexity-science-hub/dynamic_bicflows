@@ -9,7 +9,35 @@ var firstGroupIndex = null;
 var secondGroupIndex = null;
 var valueIndex = null;
 
-var format = function(d) { return locale.format(",.2f")(d)+"€"; }
+var valueFormat = null;
+
+var format = function(d) {
+    let res = d;
+    if (valueFormat.decimals && !isNaN(valueFormat.decimals)) {
+        res = locale.format(",." + valueFormat.decimals + "f")(res);
+    } else {
+        res = locale.format(",")(res);
+    }
+
+    if (valueFormat.unit) {
+        if (valueFormat.unitPosition == 'left') {
+            if (valueFormat.unitSpace) {
+                res = valueFormat.unit + " " + res;
+            } else {
+                res = valueFormat.unit + res;
+            }
+        } else {
+            if (valueFormat.unitSpace) {
+                res = res + " " + valueFormat.unit;
+            } else {
+                res = res + valueFormat.unit;
+            }
+        }
+    }
+
+    return res;
+}
+
 var spinner = new Spinner().spin(document.getElementById("mainview"));
 var wasFiltered = false;
 var barCharts;
@@ -34,6 +62,9 @@ d3.queue()
     .await(makeGraphs);
 
 function makeGraphs(error, data/*, clusters*/) {
+    if (!checkData(data)) {
+        return;
+    }
   //console.log(data);
   // console.log(clusters)
   // spinner.stop();
@@ -55,34 +86,59 @@ function makeGraphs(error, data/*, clusters*/) {
   var num_clusters = Math.round(s(document.getElementById("mainview").offsetHeight));
   var data_filtered = {};
 
-  d3.json("setNumClusters")
-    .header("Content-Type", "application/json")
-    .post(num_clusters, function(e){
+  d3.json("getValueFormat", function(format) {
+      valueFormat = format;
 
-      d3.json("getClusters")
+      d3.json("setNumClusters")
         .header("Content-Type", "application/json")
-        .post(JSON.stringify(data_filtered), function(d){
-          //console.log(d);
-          // updateAll(d);
-          spinner.stop();
+        .post(num_clusters, function(e){
 
-          createTables();
+          d3.json("getClusters")
+            .header("Content-Type", "application/json")
+            .post(JSON.stringify(data_filtered), function(d){
+              //console.log(d);
+              // updateAll(d);
+              spinner.stop();
 
-          barCharts = {};
+              createTables();
 
-          filterColumns.forEach(function(filterColumn) {
-              let newBarChart = createBarchart(filterDims[filterColumn], filterColumn);
+              barCharts = {};
 
-              barCharts[filterColumn] = newBarChart;
-          });
-          //barchart = createBarchart(timeDim);
-          //barchart_law = createBarchart(bekanntgabeDim);
-            //barchart_law = createBarchart_law();
-          sankeychart = sankey(d);
-          updateAll();
+              filterColumns.forEach(function(filterColumn) {
+                  let newBarChart = createBarchart(filterDims[filterColumn], filterColumn);
+
+                  barCharts[filterColumn] = newBarChart;
+              });
+              //barchart = createBarchart(timeDim);
+              //barchart_law = createBarchart(bekanntgabeDim);
+                //barchart_law = createBarchart_law();
+              sankeychart = sankey(d);
+              updateAll();
+            });
+
         });
+      });
+}
 
-    });
+function checkData(data) {
+    if (data.length == 0) {
+        alert("Data error: empty data file");
+
+        return false;
+    }
+
+    if (data['errorCode']) {
+        alert(data['message']);
+        return false;
+    }
+
+    if (Object.keys(data[0]).length < 3) {
+        alert("Data error: at least 3 columns are required [Group1;...;Group2;Value]");
+
+        return false;
+    }
+
+    return true;
 }
 
 function createFilterDims(data) {
@@ -262,10 +318,10 @@ function createTables(){
 
 function updateTables(newData){
   var newData = firstGroupDim.group()
-    .reduceSum(function(d) { return getValue(d); })
+    .reduceSum(function(d) {return getValue(d);})
     .top(Infinity)
     .filter(d=>d.value>=1)
-    .map(function(d){ return [d.key, d.value]; });
+    .map(function(d){return [d.key, d.value]; });
 
   firstGroupTable.clear().rows.add(newData).draw();
 
@@ -333,6 +389,7 @@ function filterData(data){
         .post(JSON.stringify(data_filtered), function(d){
           // console.log(d);
           sankeychart.openClustersF(["Home"]);
+
           updateAll(d);
           spinner.stop();
         });

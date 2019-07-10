@@ -162,9 +162,6 @@ class BiCluster(object):
     def cluster(self, data):
         global weighted_edge_list, firstGroupIndex, secondGroupIndex, valueIndex, matrix, model, row_order, column_order, rowMap, colMap, subModels, row_sums_map, column_sums_map
         subModels = {}
-        print("seawas")
-        print(data)
-        print(vars(data))
 
         dataKeys = data.keys();
         firstGroupIndex = dataKeys[0]

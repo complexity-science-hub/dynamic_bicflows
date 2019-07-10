@@ -26,17 +26,17 @@ function getTextWidth(txt){
 
 // FORMATTER
 var locale = d3.formatLocale({
-  decimal: ",",
-  thousands: ".",
+  decimal: ".",
+  thousands: ",",
   grouping: [3],
 });
 
 function format2(x) {
   var s = d3.format(".2s")(x);
   switch (s[s.length - 1]) {
-    case "G": return s.slice(0, -1) + " Mrd";
-    case "M": return s.slice(0, -1) + " Mio";
-    case "k": return s.slice(0, -1) + " Tsd";
+    case "G": return s.slice(0, -1) + " bill.";
+    case "M": return s.slice(0, -1) + " mill.";
+    case "k": return s.slice(0, -1) + " thous.";
   }
   return s;
 }

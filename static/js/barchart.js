@@ -39,9 +39,11 @@ function createBarchart(dimension, name){
   var g = svg.append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+  let yAxisFactor = getYAxisFactor();
+
   var xAxis = d3.axisBottom(x).tickFormat(function(d) {return d; });
-  var yAxis = d3.axisLeft(y).tickArguments([5]).tickFormat(function(d) { return (d.toFixed(2)/1000000); });
-  function formatYear(d){ k=""+d; yr = k.substr(0,k.length-1); qt = k.charAt(k.length-1); return yr+" Q"+qt; };
+  var yAxis = d3.axisLeft(y).tickArguments([5]).tickFormat(function(d) { return (d.toFixed(2) * yAxisFactor.value); });
+  //function formatYear(d){ k=""+d; yr = k.substr(0,k.length-1); qt = k.charAt(k.length-1); return yr+" Q"+qt; };
 
   var selections = d3.map();
 
@@ -59,7 +61,7 @@ function createBarchart(dimension, name){
       .attr("dy", "-0.5em")
       .attr("text-anchor", "middle")
       .style("fill", "#000")
-      .text("Mio €");
+      .text(yAxisFactor.label + valueFormat.unit);
 
   function chart() {
     update();
@@ -168,7 +170,7 @@ function createBarchart(dimension, name){
 
         if(!selections.values().every(f => f==false)) {
           data_filtered = dimension.filterFunction(function (f) {
-            return selections.get(f) && f;
+            return selections.get(f);// && f;
           }).top(Infinity);
           barChartHead.classed("filter-active", true);
         } else {
@@ -179,7 +181,8 @@ function createBarchart(dimension, name){
         filterData(data_filtered);
       })
       .on('mousemove', function(d){
-        updateToolTip(d3.event, formatYear(d.key), format(d.value));
+        //updateToolTip(d3.event, formatYear(d.key), format(d.value));
+        updateToolTip(d3.event, d.key, format(d.value));
         if(!selections.get(d.key))
           d3.select(this).style("fill", "brown")
       })
@@ -205,6 +208,46 @@ function createBarchart(dimension, name){
       });
 
       return maxKeyLength > rotateXLabelThreshold;
+    }
+
+    function isRotateXLabels() {
+      data = dimension.group().reduceSum(function (d) {
+        return getValue(d);
+      }).top(Infinity);
+
+      maxKeyLength = 0;
+
+      data.forEach(function(record) {
+        maxKeyLength = Math.max(maxKeyLength, record.key.toString().length);
+      });
+
+      return maxKeyLength > rotateXLabelThreshold;
+    }
+
+    function getYAxisFactor() {
+      data = dimension.group().reduceSum(function (d) {
+        return getValue(d);
+      }).top(Infinity);
+
+      maxValue = 0;
+
+      data.forEach(function(record) {
+        maxValue = Math.max(maxValue, record.value);
+      });
+
+      if (maxValue >= 1000000000) {
+          return {label: 'bill. ', value: 0.000000001};
+      }
+
+      if (maxValue >= 1000000) {
+          return {label: 'mill. ', value: 0.000001};
+      }
+
+      if (maxValue >= 1000) {
+          return {label: 'thous. ', value: 0.001};
+      }
+
+      return {label: '', value: 1};
     }
 
     return chart;

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Dataset</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/dataupload.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='lib/css/Materialize/materialize.min.css') }}">
+</head>
+<body>
+<div class="dataupload-wrapper valign-wrapper">
+    <div class="container">
+        <div class="row">
+            <div class="card">
+                <div class="card-content">
+                  <span class="card-title">Choose Dataset</span>
+                    <form>
+                        <div class="row">
+                            <input id="upload" type="file">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="card">
+                <div class="card-content">
+                  <span class="card-title">Value formatting</span>
+                    <form>
+                        <div class="row">
+                            <div class="input-field">
+                              <input placeholder="e.g. €" id="unit" type="text">
+                              <label for="unit">Unit</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="input-field">
+                              <input id="decimals" type="text">
+                              <label for="decimals">Value decimals</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label>
+                                <input id="unit_space" type="checkbox" class="filled-in" checked="checked" />
+                                <span>Space between value and unit</span>
+                            </label>
+                        </div>
+                        <div class="row">
+                             <div class="input-field">
+                                <select id="unit_position">
+                                  <option value="left">Left of value</option>
+                                  <option value="right" selected>Right of value</option>
+                                </select>
+                                <label>Unit positioning</label>
+                              </div>
+                        </div>
+                    </form>
+                    <span>e.g. </span><b id="formatPreview">1234</b>
+                </div>
+            </div>
+        </div>
+        <button class="btn waves-effect waves-light" type="submit" name="submit" id="submit">Submit</button>
+    </div>
+</div>
+
+
+    <div id="urlInfoModal" class="modal">
+        <div class="modal-content">
+          <h4>Dataset uploaded</h4>
+          <p id="urlInfoModalText"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-close btn waves-effect waves-light" type="submit" name="submit" id="submit">OK</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='lib/js/materialize.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='lib/js/d3.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/dataupload.js')}}"></script>
+</body>
+</html>
