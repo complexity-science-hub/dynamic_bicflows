@@ -19,17 +19,7 @@ function initMaterial() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    if (typeof(M) != 'undefined') {
-        initMaterial();
-    } else {
-        const initMaterialInterval = setInterval(function () {
-            if (typeof(M) != 'undefined') {
-                initMaterial();
-                clearInterval(initMaterialInterval);
-            }
-            console.log("interval tick");
-        }, 300);
-    }
+    initMaterial();
 
     const submitBtn = document.getElementById('submit');
     submitBtn.disabled = true;
