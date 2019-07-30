@@ -9,6 +9,7 @@ from BiCluster import *
 import ZODB, ZODB.FileStorage
 import dataset
 import uuid
+import os
 
 app = Flask(__name__)
 app.debug = True
@@ -17,7 +18,9 @@ dataId = 0
 
 data = 0
 
-connection = ZODB.connection('database/db.fs')
+curPath = os.path.dirname(__file__)
+
+connection = ZODB.connection(os.path.join(curPath, 'database/db.fs'))
 dbRoot = connection.root
 
 if not hasattr(dbRoot, 'dataSets'):
@@ -49,7 +52,7 @@ def createDataSet():
 	receivedData = request.get_json()
 	uid = uuid.uuid1().hex
 	print("hello dataset, id = " + uid)
-	file = "uploads/" + uid
+	file = os.path.join(curPath, "uploads/" + uid)
 	with open(file, 'wb+') as f:
 		f.write(receivedData["fileData"].encode("utf-8"))
 
