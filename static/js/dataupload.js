@@ -19,7 +19,17 @@ function initMaterial() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    initMaterial();
+    if (typeof(M) != 'undefined') {
+        initMaterial();
+    } else {
+        const initMaterialInterval = setInterval(function () {
+            if (typeof(M) != 'undefined') {
+                initMaterial();
+                clearInterval(initMaterialInterval);
+            }
+            console.log("interval tick");
+        }, 300);
+    }
 
     const submitBtn = document.getElementById('submit');
     submitBtn.disabled = true;
