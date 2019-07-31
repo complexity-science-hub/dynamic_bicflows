@@ -72,7 +72,7 @@ def getDataSets():
 
 	for dataSet in dbRoot.dataSets:
 		res = res + "<tr>"
-		res = res + "<td><a href='../" + dataSet + "'>" + dataSet + "</a></td>"
+		res = res + "<td><a href='./" + dataSet + "'>" + dataSet + "</a></td>"
 		res = res + "<td>" + dbRoot.dataSets[dataSet].originalFilename + "</td>"
 		res = res + "<td>" + dbRoot.dataSets[dataSet].creationDateTime.strftime("%m/%d/%Y, %H:%M:%S") + "</td>"
 		res = res + "<td>" + dbRoot.dataSets[dataSet].lastRequestDateTime.strftime("%m/%d/%Y, %H:%M:%S") + "</td>"
