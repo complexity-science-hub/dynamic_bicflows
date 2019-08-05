@@ -268,7 +268,7 @@ function sankey(data){
     }
     else{
       totalsum = d3.sum(d.elements, f=>f.value)
-      updateToolTip(d3.event, d.elements.length+" Organisations", format(totalsum))
+      updateToolTip(d3.event, d.elements.length+ " " + groupedEntitiesName, format(totalsum))
     }
   }
 

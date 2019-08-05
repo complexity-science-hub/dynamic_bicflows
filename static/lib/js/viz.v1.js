@@ -542,7 +542,7 @@
                 ,width:bar.width
                 ,sum:(elements.length == 1) ? orgs.get(elements[0].key) : d3.sum(elements, function(e){ if(orgs.has(e.key)) return orgs.get(e.key); })
                 ,key:bar.key
-                ,other: (elements.length == 1) ? elements[0].key : d3.sum(elements, function(e){ if(orgs.has(e.key)) return 1; })+" Organisations"
+                ,other: (elements.length == 1) ? elements[0].key : d3.sum(elements, function(e){ if(orgs.has(e.key)) return 1; })+ " " + groupedEntitiesName
                 // ,barHeight:bar.height
               });
               // bar.subtotal = selectionBars[selectionBars.length-1];

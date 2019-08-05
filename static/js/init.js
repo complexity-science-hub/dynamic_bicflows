@@ -47,6 +47,8 @@ var searchbar;
 var firstGroupTable, secondGroupTable;
 var allClusters;
 
+var groupedEntitiesName = "grouped entities";
+
 /*d3.select("html").on("keydown", function(d){
   kc = d3.event.keyCode;
   if(kc == 49)

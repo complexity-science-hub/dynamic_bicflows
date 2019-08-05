@@ -103,6 +103,15 @@ def getData():
 
 	if dbRoot.dataSets.has_key(dataId):
 		data = pd.read_csv(dbRoot.dataSets[dataId].file, ";")
+
+		dataKeys = data.keys();
+		firstGroupIndex = dataKeys[0]
+		secondGroupIndex = dataKeys[len(dataKeys) - 2]
+
+		data[firstGroupIndex] = data[firstGroupIndex].astype(str)
+		data[secondGroupIndex] = data[secondGroupIndex].astype(str)
+
+		print(data)
 		return data.to_json(orient='records')
 	else:
 		return json.dumps({"errorCode": 1, "message": "Dataset with id " + dataId + " not found"})
@@ -126,7 +135,9 @@ def getClusters():
 		json_dict = request.get_json()
 		filteredData = BiCluster().filterData(data, json_dict)
 		# cluster_idcs = BiCluster().cluster(pd.DataFrame(json_dict))
+		print(filteredData)
 		cluster_idcs = BiCluster().cluster(filteredData)
+		print(cluster_idcs)
 		return json.dumps(cluster_idcs)
 
 
