@@ -57,8 +57,11 @@ var groupedEntitiesName = "grouped entities";
    changeData(1);
  })*/
 
+var pathSegments = window.location.pathname.split('/');
+var dataId = pathSegments[pathSegments.length - 1];
+
 d3.queue()
-    .defer(d3.json, "getData")
+    .defer(d3.json, "getData/" + dataId)
     // .defer(function(d){ d3.json("/setNumClusters").header("Content-Type", "application/json").post(9,function(e){return});},  true)
     // .defer(d3.json, "/getClusters")
     .await(makeGraphs);
@@ -84,18 +87,16 @@ function makeGraphs(error, data/*, clusters*/) {
       return getValue(d);
   });
 
-  var s = d3.scaleLinear().range([2,9]).domain([400,1100])
-  var num_clusters = Math.round(s(document.getElementById("mainview").offsetHeight));
   var data_filtered = {};
 
-  d3.json("getValueFormat", function(format) {
+  d3.json("getValueFormat/" + dataId, function(format) {
       valueFormat = format;
 
-      d3.json("setNumClusters")
+      /*d3.json("setNumClusters")
         .header("Content-Type", "application/json")
-        .post(num_clusters, function(e){
+        .post(num_clusters, function(e){*/
 
-          d3.json("getClusters")
+          d3.json("getClusters/" + dataId + "/" + getNumClusters())
             .header("Content-Type", "application/json")
             .post(JSON.stringify(data_filtered), function(d){
               //console.log(d);
@@ -119,7 +120,7 @@ function makeGraphs(error, data/*, clusters*/) {
             });
 
         });
-      });
+      //});
 }
 
 function checkData(data) {
@@ -386,7 +387,7 @@ function filterData(data){
       });
 
     // if(barchart.hasSelections() || barchart_law.hasSelections()){
-      d3.json("getClusters")
+      d3.json("getClusters/" + dataId + "/" + getNumClusters())
         .header("Content-Type", "application/json")
         .post(JSON.stringify(data_filtered), function(d){
           // console.log(d);
@@ -488,15 +489,18 @@ function backToSankey(){
   $("#backToSankey").hide();
 }
 
+/*
+* this is never used, requires refactoring if it is used again... see /removeSubClusters endpoint
+*
 function back(){
   var cID = sankeychart.openClusters.pop();
   spinner.spin(document.getElementById("mainview"));
-  d3.json("/removeSubClusters/"+cID, function(f){
+  d3.json("/removeSubClusters/" + dataId + "/" + cID, function(f){
     spinner.stop();
     sankeychart.update(f);
   })
   $("#back").hide();
-}
+}*/
 
 function updateToolTip(e, title, sum, subtotal) {
   var top = e.pageY+10;
@@ -555,4 +559,9 @@ function getValue(d) {
     }
 
     return d[valueIndex];
+}
+
+function getNumClusters() {
+    var s = d3.scaleLinear().range([2,9]).domain([400,1100]);
+    return Math.round(s(document.getElementById("mainview").offsetHeight));
 }

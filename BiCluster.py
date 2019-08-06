@@ -18,20 +18,17 @@ class BiCluster(object):
     def __init__(self):
         pass
 
-    def subcluster3(self, clusterID):
-        global subModels
-
+    def subcluster3(self, clusterID, cacheObject, num_clusters):
         clusterID_array = [int(x) for x in clusterID.split('.')]
         # print(clusterID_array)
-        # print("subModels",subModels)
-        subMatrix = model.get_submatrix(matrix,clusterID_array[0])
-        sub_row_order = row_order[model.get_indices(clusterID_array[0])[0]]
-        sub_column_order = column_order[model.get_indices(clusterID_array[0])[1]]
+        # print("cacheObject["subModels"]",cacheObject["subModels"])
+        subMatrix = cacheObject["model"].get_submatrix(cacheObject["matrix"],clusterID_array[0])
+        sub_row_order = cacheObject["row_order"][cacheObject["model"].get_indices(clusterID_array[0])[0]]
+        sub_column_order = cacheObject["column_order"][cacheObject["model"].get_indices(clusterID_array[0])[1]]
 
         for i, cID in enumerate(clusterID_array[1:]):
             smID = '.'.join(str(x) for x in clusterID_array[:(i+1)])
-            print("smID",smID)
-            sm = subModels[smID]
+            sm = cacheObject["subModels"][smID]
             subMatrix = sm.get_submatrix(subMatrix,cID)
             sub_row_order = sub_row_order[sm.get_indices(cID)[0]]
             sub_column_order = sub_column_order[sm.get_indices(cID)[1]]
@@ -47,42 +44,42 @@ class BiCluster(object):
 
         subModel = CoclustMod(num_clusters2,random_state=0)
 
-        subModels[clusterID] = subModel
-        # print("subModels",subModels)
+        cacheObject["subModels"][clusterID] = subModel
+        # print("cacheObject["subModels"]",cacheObject["subModels"])
         subModel.fit(subMatrix)
 
         for i, label in enumerate(subModel.row_labels_):
-            rowMap[sub_row_order[i]] = str(clusterID)+"."+str(label)
+            cacheObject["rowMap"][sub_row_order[i]] = str(clusterID)+"."+str(label)
 
         for i, label in enumerate(subModel.column_labels_):
-            colMap[sub_column_order[i]] = str(clusterID)+"."+str(label)
+            cacheObject["colMap"][sub_column_order[i]] = str(clusterID)+"."+str(label)
 
         # ret = []
-        # wel = weighted_edge_list.copy()
-        # wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap))
-        # wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap))
+        # wel = cacheObject["weighted_edge_list"].copy()
+        # wel[cacheObject["firstGroupIndex"]].update(wel[cacheObject["firstGroupIndex"]].map(cacheObject["rowMap"]))
+        # wel[cacheObject["secondGroupIndex"]].update(wel[cacheObject["secondGroupIndex"]].map(cacheObject["colMap"]))
 
         rowLabelSet = set([str(clusterID)+"."+str(x) for x in subModel.row_labels_])
         colLabelSet = set([str(clusterID)+"."+str(x) for x in subModel.column_labels_])
         #---
 
-        rowMap2 = {k:(v if v in rowLabelSet else "Sonstige") for k,v in rowMap.items()}
-        colMap2 = {k:(v if v in colLabelSet else "Sonstige") for k,v in colMap.items()}
+        rowMap2 = {k:(v if v in rowLabelSet else "Sonstige") for k,v in cacheObject["rowMap"].items()}
+        colMap2 = {k:(v if v in colLabelSet else "Sonstige") for k,v in cacheObject["colMap"].items()}
 
-        wel = weighted_edge_list.copy()
+        wel = cacheObject["weighted_edge_list"].copy()
         # print(rowLabelSet)
 
-        wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap2))
-        wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap2))
+        wel[cacheObject["firstGroupIndex"]].update(wel[cacheObject["firstGroupIndex"]].map(rowMap2))
+        wel[cacheObject["secondGroupIndex"]].update(wel[cacheObject["secondGroupIndex"]].map(colMap2))
 
-        idc = wel[(wel[firstGroupIndex].astype(str).str[:len(clusterID)] != clusterID) & (wel[secondGroupIndex].astype(str).str[:len(clusterID)] != clusterID)].index
+        idc = wel[(wel[cacheObject["firstGroupIndex"]].astype(str).str[:len(clusterID)] != clusterID) & (wel[cacheObject["secondGroupIndex"]].astype(str).str[:len(clusterID)] != clusterID)].index
         wel = wel.drop(idc)
 
-        wel2 = weighted_edge_list.copy()
+        wel2 = cacheObject["weighted_edge_list"].copy()
         wel2 = wel2.drop(idc)
-        row_sums_map2 = wel2.groupby(by = [firstGroupIndex]).sum().to_dict()[valueIndex]
+        row_sums_map2 = wel2.groupby(by = [cacheObject["firstGroupIndex"]]).sum().to_dict()[cacheObject["valueIndex"]]
         row_sums_map2 = {k:float(v) for k,v in row_sums_map2.items()}
-        column_sums_map2 = wel2.groupby(by = [secondGroupIndex]).sum().to_dict()[valueIndex]
+        column_sums_map2 = wel2.groupby(by = [cacheObject["secondGroupIndex"]]).sum().to_dict()[cacheObject["valueIndex"]]
         column_sums_map2 = {k:float(v) for k,v in column_sums_map2.items()}
 
         ret = []
@@ -105,36 +102,36 @@ class BiCluster(object):
             }
 
         return {"data": ret, "clusters": clusters}
-        # return {"data": ret, "clusters": clusters, "rows": [[k,v] for k,v in row_sums_map.items()], "columns": [[k,v] for k,v in column_sums_map.items()]}
+        # return {"data": ret, "clusters": clusters, "rows": [[k,v] for k,v in cacheObject["row_sums_map"].items()], "columns": [[k,v] for k,v in column_sums_map.items()]}
 
-    def removeSubClusters3(self, clusterID):
+    def removeSubClusters3(self, clusterID, cacheObject):
         smID = clusterID[:clusterID.rfind(".")]
 
-        for key, value in rowMap.items():
-            if(rowMap[key].startswith(clusterID)):
-                rowMap[key] = clusterID
+        for key, value in cacheObject["rowMap"].items():
+            if(cacheObject["rowMap"][key].startswith(clusterID)):
+                cacheObject["rowMap"][key] = clusterID
 
-        for key, value in colMap.items():
-            if(colMap[key].startswith(clusterID)):
-                colMap[key] = clusterID
+        for key, value in cacheObject["colMap"].items():
+            if(cacheObject["colMap"][key].startswith(clusterID)):
+                cacheObject["colMap"][key] = clusterID
 
-        rowMap2 = {k:(v if v.startswith(smID) else "Sonstige") for k,v in rowMap.items()}
-        colMap2 = {k:(v if v.startswith(smID) else "Sonstige") for k,v in colMap.items()}
+        rowMap2 = {k:(v if v.startswith(smID) else "Sonstige") for k,v in cacheObject["rowMap"].items()}
+        colMap2 = {k:(v if v.startswith(smID) else "Sonstige") for k,v in cacheObject["colMap"].items()}
 
 
-        wel = weighted_edge_list.copy()
+        wel = cacheObject["weighted_edge_list"].copy()
 
-        wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap2))
-        wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap2))
+        wel[cacheObject["firstGroupIndex"]].update(wel[cacheObject["firstGroupIndex"]].map(rowMap2))
+        wel[cacheObject["secondGroupIndex"]].update(wel[cacheObject["secondGroupIndex"]].map(colMap2))
 
-        idc = wel[(wel[firstGroupIndex].astype(str).str[:len(smID)] != smID) & (wel[secondGroupIndex].astype(str).str[:len(smID)] != smID)].index
+        idc = wel[(wel[cacheObject["firstGroupIndex"]].astype(str).str[:len(smID)] != smID) & (wel[cacheObject["secondGroupIndex"]].astype(str).str[:len(smID)] != smID)].index
         wel = wel.drop(idc)
 
-        wel2 = weighted_edge_list.copy()
+        wel2 = cacheObject["weighted_edge_list"].copy()
         wel2 = wel2.drop(idc)
-        row_sums_map2 = wel2.groupby(by = [firstGroupIndex]).sum().to_dict()[valueIndex]
+        row_sums_map2 = wel2.groupby(by = [cacheObject["firstGroupIndex"]]).sum().to_dict()[cacheObject["valueIndex"]]
         row_sums_map2 = {k:float(v) for k,v in row_sums_map2.items()}
-        column_sums_map2 = wel2.groupby(by = [secondGroupIndex]).sum().to_dict()[valueIndex]
+        column_sums_map2 = wel2.groupby(by = [cacheObject["secondGroupIndex"]]).sum().to_dict()[cacheObject["valueIndex"]]
         column_sums_map2 = {k:float(v) for k,v in column_sums_map2.items()}
 
         ret = []
@@ -157,76 +154,77 @@ class BiCluster(object):
             }
 
         return {"data": ret, "clusters": clusters}
-        # return {"data": ret, "clusters": clusters, "rows": [[k,v] for k,v in row_sums_map.items()], "columns": [[k,v] for k,v in column_sums_map.items()]}
+        # return {"data": ret, "clusters": clusters, "rows": [[k,v] for k,v in cacheObject["subModels"].items()], "columns": [[k,v] for k,v in cacheObject["column_sums_map"].items()]}
 
-    def cluster(self, data):
-        global weighted_edge_list, firstGroupIndex, secondGroupIndex, valueIndex, matrix, model, row_order, column_order, rowMap, colMap, subModels, row_sums_map, column_sums_map
-        subModels = {}
+    def cluster(self, data, cacheObject, num_clusters):
+        #global weighted_edge_list, cacheObject["firstGroupIndex"], cacheObject["secondGroupIndex"], cacheObject["valueIndex"], cacheObject["matrix"], cacheObject["model"], cacheObject["row_order"], cacheObject["column_order"], cacheObject["rowMap"], cacheObject["colMap"], cacheObject["subModels"], cacheObject["subModels"], cacheObject["column_sums_map"]
+        cacheObject["subModels"] = {}
 
         dataKeys = data.keys();
-        firstGroupIndex = dataKeys[0]
-        secondGroupIndex = dataKeys[len(dataKeys) - 2]
-        valueIndex = dataKeys[len(dataKeys) - 1]
+        cacheObject["firstGroupIndex"] = dataKeys[0]
+        cacheObject["secondGroupIndex"] = dataKeys[len(dataKeys) - 2]
+        cacheObject["valueIndex"] = dataKeys[len(dataKeys) - 1]
 
         print("the keys: ")
-        print(firstGroupIndex)
-        print(secondGroupIndex)
-        print(valueIndex)
+        print(cacheObject["firstGroupIndex"])
+        print(cacheObject["secondGroupIndex"])
+        print(cacheObject["valueIndex"])
         # num_clusters = 9
-        weighted_edge_list = data[[firstGroupIndex,secondGroupIndex,valueIndex]]
-        weighted_edge_list = weighted_edge_list.groupby(by = [firstGroupIndex, secondGroupIndex]).sum().reset_index()
+        cacheObject["weighted_edge_list"] = data[[cacheObject["firstGroupIndex"],cacheObject["secondGroupIndex"],cacheObject["valueIndex"]]]
+        cacheObject["weighted_edge_list"] = cacheObject["weighted_edge_list"].groupby(by = [cacheObject["firstGroupIndex"], cacheObject["secondGroupIndex"]]).sum().reset_index()
 
-        G = nx.from_pandas_dataframe(weighted_edge_list,firstGroupIndex,secondGroupIndex,valueIndex, create_using=nx.DiGraph())
-        row_order = np.sort(np.unique(weighted_edge_list[firstGroupIndex]))
-        column_order = np.sort(np.unique(weighted_edge_list[secondGroupIndex]))
-        matrix_real = biadjacency_matrix(G, row_order, column_order=column_order, weight=valueIndex)
-        matrix = matrix_real.toarray()
-        row_sums = matrix.sum(axis=1).round(2)
-        row_sums_map = dict(zip(row_order, row_sums))
-        row_sums_map = {k:float(v) for k,v in row_sums_map.items()}
-        column_sums = matrix.sum(axis=0).round(2)
-        column_sums_map = dict(zip(column_order, column_sums))
-        column_sums_map = {k:float(v) for k,v in column_sums_map.items()}
+        G = nx.from_pandas_dataframe(cacheObject["weighted_edge_list"],cacheObject["firstGroupIndex"],cacheObject["secondGroupIndex"],cacheObject["valueIndex"], create_using=nx.DiGraph())
+        cacheObject["row_order"] = np.sort(np.unique(cacheObject["weighted_edge_list"][cacheObject["firstGroupIndex"]]))
+        cacheObject["column_order"] = np.sort(np.unique(cacheObject["weighted_edge_list"][cacheObject["secondGroupIndex"]]))
+        matrix_real = biadjacency_matrix(G, cacheObject["row_order"], column_order=cacheObject["column_order"], weight=cacheObject["valueIndex"])
+        cacheObject["matrix"] = matrix_real.toarray()
+        row_sums = cacheObject["matrix"].sum(axis=1).round(2)
+        cacheObject["row_sums_map"] = dict(zip(cacheObject["row_order"], row_sums))
+        cacheObject["row_sums_map"] = {k:float(v) for k,v in cacheObject["row_sums_map"].items()}
+        column_sums = cacheObject["matrix"].sum(axis=0).round(2)
+        cacheObject["column_sums_map"] = dict(zip(cacheObject["column_order"], column_sums))
+        cacheObject["column_sums_map"] = {k:float(v) for k,v in cacheObject["column_sums_map"].items()}
 
-        model = CoclustMod(min(min(matrix.shape), num_clusters),random_state=0) #n_init=500
-        model.fit(matrix)
+        cacheObject["model"] = CoclustMod(min(min(cacheObject["matrix"].shape), num_clusters),random_state=0) #n_init=500
+        cacheObject["model"].fit(cacheObject["matrix"])
 
         #test andere liste senden
-        rowMap = dict(zip(row_order, list(map(str, model.row_labels_))))
-        colMap = dict(zip(column_order, list(map(str,model.column_labels_))))
+        cacheObject["rowMap"] = dict(zip(cacheObject["row_order"], list(map(str, cacheObject["model"].row_labels_))))
+        cacheObject["colMap"] = dict(zip(cacheObject["column_order"], list(map(str,cacheObject["model"].column_labels_))))
         ret = []
 
-        wel = weighted_edge_list.copy()
-        wel[firstGroupIndex].update(wel[firstGroupIndex].map(rowMap))
-        wel[secondGroupIndex].update(wel[secondGroupIndex].map(colMap))
-        ret = wel.as_matrix().tolist()
+        wel = cacheObject["weighted_edge_list"].copy()
+        wel[cacheObject["firstGroupIndex"]].update(wel[cacheObject["firstGroupIndex"]].map(cacheObject["rowMap"]))
+        wel[cacheObject["secondGroupIndex"]].update(wel[cacheObject["secondGroupIndex"]].map(cacheObject["colMap"]))
+        #ret = wel.as_matrix().tolist()
+        ret = wel.values.tolist()
 
-        clusters = self.getElementsbyCluster()
+        clusters = self.getElementsbyCluster(cacheObject)
 
         return {"data": ret, "clusters": clusters}
-        # return {"data": ret, "clusters": clusters, "rows": [[k,v] for k,v in row_sums_map.items()], "columns": [[k,v] for k,v in column_sums_map.items()]}
+        # return {"data": ret, "clusters": clusters, "rows": [[k,v] for k,v in cacheObject["row_sums_map"].items()], "columns": [[k,v] for k,v in cacheObject["column_sums_map"].items()]}
 
-    def getElementsbyCluster(self):
+    def getElementsbyCluster(self, cacheObject):
         inv_rowMap = {}
-        for k, v in rowMap.items():
+        for k, v in cacheObject["rowMap"] .items():
             inv_rowMap.setdefault(v, []).append(k)
 
         inv_colMap = {}
-        for k, v in colMap.items():
+        for k, v in cacheObject["colMap"].items():
             inv_colMap.setdefault(v, []).append(k)
 
         clusters = {}
         for label in inv_rowMap:
             clusters[label] = {
-                "rows": {k: row_sums_map[k] for k in inv_rowMap[label] if k in row_sums_map},
-                "columns": {k: column_sums_map[k] for k in inv_colMap[label] if k in column_sums_map}
+                "rows": {k: cacheObject["row_sums_map"][k] for k in inv_rowMap[label] if k in cacheObject["row_sums_map"]},
+                "columns": {k: cacheObject["column_sums_map"][k] for k in inv_colMap[label] if k in cacheObject["column_sums_map"]}
             }
         return clusters
 
-    def setNumClusters(self, num):
-        global num_clusters
-        num_clusters = num
-        # return ""
+    #def setNumClusters(self, num):
+    #    global num_clusters
+    #    num_clusters = num
+    #   return ""
 
     def filterData(self, data, filters):
         data_tmp = data.copy()

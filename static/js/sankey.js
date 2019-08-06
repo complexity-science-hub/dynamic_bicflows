@@ -222,12 +222,26 @@ function sankey(data){
           .style("fill-opacity", 0)
           .on("click", function(e){
             spinner.spin(document.getElementById("mainview"));
-            d3.json("removeSubClusters/"+cID, function(f){
-              while(openClusters[openClusters.length-1] != oldcID){ g.select("#cb"+openClusters.pop().replace(/\./g,'')).remove(); }
-              update(f, true);
-              spinner.stop();
-            })
-          })
+
+            var data_filtered = {};
+
+            filterColumns.forEach(function(filterColumn) {
+                data_filtered[filterColumn] = barCharts[filterColumn].getSelections();
+            });
+
+            d3.json("getClusters/" + dataId + "/" + getNumClusters())
+              .header("Content-Type", "application/json")
+              .post(JSON.stringify(data_filtered), function(c) {
+                d3.json("removeSubClusters/" + dataId + "/" + cID + "/" + getNumClusters(), function (f) {
+                  console.log("clicked for removeSubClusters 2");
+                  while (openClusters[openClusters.length - 1] != oldcID) {
+                    g.select("#cb" + openClusters.pop().replace(/\./g, '')).remove();
+                  }
+                  update(f, true);
+                  spinner.stop();
+                })
+              })
+          });
 
       //change opacities
       g.select("#cb"+oldcID.replace(/\./g,'')).selectAll(".contextBars").selectAll("rect")
@@ -503,20 +517,36 @@ function sankey(data){
   function click(d){
     if(d.key == "Sonstige") return;
 
+    console.log("clicked for getSubClusters");
+
     selected = false;
     openClusters.push(d.key);
     spinner.spin(document.getElementById("mainview"));
-    d3.json("getSubClusters/"+d.key, function(f){
-      // console.log(f)
+    /*d3.json("getSubClusters/" + dataId + "/" + d.key + "/" + getNumClusters(), function(f){
       spinner.stop();
-      // openClusters.each(function(g){ f.data.push([g+"#Cluster", g+"#Cluster", 0]); });
       update(f);
-      // histogram(f);
-    })
-    // $("#back").show();
-    // updateProgress();
+    });*/
+
+    var data_filtered = {};
+
+    filterColumns.forEach(function(filterColumn) {
+        data_filtered[filterColumn] = barCharts[filterColumn].getSelections();
+    });
+
+    d3.json("getClusters/" + dataId + "/" + getNumClusters())
+        .header("Content-Type", "application/json")
+        .post(JSON.stringify(data_filtered), function(c){
+           d3.json("getSubClusters/" + dataId + "/" + d.key + "/" + getNumClusters(), function(f){
+            spinner.stop();
+            update(f);
+          });
+        }
+    );
   }
 
+  /*
+  * this is never used, requires refactoring if it is used again... see /removeSubClusters endpoint
+  *
   function updateProgress(){
     p = d3.select("#progress")
     p.selectAll("text").remove();
@@ -531,7 +561,7 @@ function sankey(data){
         .text(cID)
         .on("click", function(e){
           spinner.spin(document.getElementById("mainview"));
-          d3.json("removeSubClusters/"+openClusters[i+1], function(f){
+          d3.json("removeSubClusters/" + dataId + "/" +openClusters[i+1], function(f){
             while(openClusters[openClusters.length-1] != cID){ openClusters.pop(); }
             update(f);
 
@@ -539,7 +569,7 @@ function sankey(data){
           })
         })
     })
-  }
+  }*/
 
   function invokeTableSelection(d){
     if(d.part == "primary"){

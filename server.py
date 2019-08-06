@@ -14,9 +14,7 @@ import os
 app = Flask(__name__)
 app.debug = True
 
-dataId = 0
-
-data = 0
+cacheObject = {}
 
 curPath = os.path.dirname(__file__)
 
@@ -29,16 +27,19 @@ if not hasattr(dbRoot, 'dataSets'):
 
 @app.route("/", methods=['GET', 'POST'])
 def output():
-	global dataId
-	dataId = 0
 	return render_template('dataupload.html')
 
 
-@app.route("/<string:id>", methods=['GET', 'POST'])
-def dataById(id):
-	global dataId
-	dataId = id
+def checkDataCache(dataId):
+	if (dataId in cacheObject):
+		return
 
+	print("reload data into cache")
+	return getData(dataId)
+
+
+@app.route("/<string:dataId>", methods=['GET', 'POST'])
+def dataById(dataId):
 	if dbRoot.dataSets.has_key(dataId):
 		dbRoot.dataSets[dataId].lastRequestDateTime = datetime.datetime.now()
 		transaction.commit()
@@ -63,6 +64,45 @@ def createDataSet():
 
 @app.route("/datasets", methods=['GET'])
 def getDataSets():
+	global cacheObject
+
+	res = "<table border='1'><tr>"
+	res = res + "<th>ID</th>"
+	res = res + "<th>originalFilename</th>"
+	res = res + "<th>creationDateTime</th>"
+	res = res + "<th>lastRequestDateTime</th>"
+	res = res + "<th>currently cached</th>"
+	res = res + "</tr>"
+
+	for dataSet in dbRoot.dataSets:
+		res = res + "<tr>"
+		res = res + "<td><a href='./" + dataSet + "'>" + dataSet + "</a></td>"
+		res = res + "<td>" + dbRoot.dataSets[dataSet].originalFilename + "</td>"
+		res = res + "<td>" + dbRoot.dataSets[dataSet].creationDateTime.strftime("%m/%d/%Y, %H:%M:%S") + "</td>"
+		res = res + "<td>" + dbRoot.dataSets[dataSet].lastRequestDateTime.strftime("%m/%d/%Y, %H:%M:%S") + "</td>"
+
+		if (dataSet in cacheObject):
+			res = res + '<td align="center">x</td>'
+		else:
+			res = res + "<td></td>"
+
+		res = res + "</tr>"
+
+	res = res + "</table>"
+
+	return res
+
+@app.route("/clearcache", methods=['GET'])
+def clearDataCache():
+	global cacheObject
+	cacheObject = {}
+	return "cache cleared"
+
+
+@app.route("/datacache", methods=['GET'])
+def getDataCache():
+	global cacheObject
+
 	res = "<table border='1'><tr>"
 	res = res + "<th>ID</th>"
 	res = res + "<th>originalFilename</th>"
@@ -70,7 +110,7 @@ def getDataSets():
 	res = res + "<th>lastRequestDateTime</th>"
 	res = res + "</tr>"
 
-	for dataSet in dbRoot.dataSets:
+	for dataSet in cacheObject:
 		res = res + "<tr>"
 		res = res + "<td><a href='./" + dataSet + "'>" + dataSet + "</a></td>"
 		res = res + "<td>" + dbRoot.dataSets[dataSet].originalFilename + "</td>"
@@ -82,10 +122,8 @@ def getDataSets():
 
 	return res
 
-
-@app.route("/getValueFormat", methods=['GET'])
-def getValueUnit():
-	global dataId
+@app.route("/getValueFormat/<string:dataId>", methods=['GET'])
+def getValueUnit(dataId):
 	if dbRoot.dataSets.has_key(dataId):
 		res = {"unit": dbRoot.dataSets[dataId].unit,
 			   "decimals": dbRoot.dataSets[dataId].decimals,
@@ -93,72 +131,76 @@ def getValueUnit():
 			   "unitPosition": dbRoot.dataSets[dataId].unitPosition}
 		return json.dumps(res)
 	else:
-		return json.dumps("seawas")
+		return json.dumps("")
 
 
-@app.route("/getData", methods=['GET'])
-def getData():
-	global data
-	global dataId
+@app.route("/getData/<string:dataId>", methods=['GET'])
+def getData(dataId):
+	global cacheObject
+
+	if (dataId in cacheObject):
+		return cacheObject[dataId]["dataset"].to_json(orient='records')
 
 	if dbRoot.dataSets.has_key(dataId):
-		data = pd.read_csv(dbRoot.dataSets[dataId].file, ";")
+		cacheObject[dataId] = {}
+		cacheObject[dataId]["dataset"] = pd.read_csv(dbRoot.dataSets[dataId].file, ";")
 
-		dataKeys = data.keys();
+		dataKeys = cacheObject[dataId]["dataset"].keys();
 		firstGroupIndex = dataKeys[0]
 		secondGroupIndex = dataKeys[len(dataKeys) - 2]
 
-		data[firstGroupIndex] = data[firstGroupIndex].astype(str)
-		data[secondGroupIndex] = data[secondGroupIndex].astype(str)
+		cacheObject[dataId]["dataset"][firstGroupIndex] = cacheObject[dataId]["dataset"][firstGroupIndex].astype(str)
+		cacheObject[dataId]["dataset"][secondGroupIndex] = cacheObject[dataId]["dataset"][secondGroupIndex].astype(str)
 
-		print(data)
-		return data.to_json(orient='records')
+		return cacheObject[dataId]["dataset"].to_json(orient='records')
 	else:
 		return json.dumps({"errorCode": 1, "message": "Dataset with id " + dataId + " not found"})
 
 
-@app.route("/getDummyData", methods=['GET'])
-def getDummyData():
-	global data
-	data = pd.read_table("static/data/dummy.csv", ";")
-	return data.to_json(orient='records')
+@app.route("/getClusters/<string:dataId>/<int:numClusters>", methods=['GET', 'POST'])
+def getClusters(dataId, numClusters):
+	checkDataCache(dataId)
 
-
-@app.route("/getClusters", methods=['GET', 'POST'])
-def getClusters():
 	if request.method == 'GET':
-		cluster_idcs = BiCluster().cluster(data)
+		cluster_idcs = BiCluster().cluster(cacheObject[dataId]["dataset"], cacheObject[dataId], numClusters)
 		# json.dump(cluster_idcs, open("static/data/data.json", 'w'))
 		# cluster_idcs = json.load(open("static/data/data.json"))
 		return json.dumps(cluster_idcs)
 	else:
 		json_dict = request.get_json()
-		filteredData = BiCluster().filterData(data, json_dict)
+		filteredData = BiCluster().filterData(cacheObject[dataId]["dataset"], json_dict)
 		# cluster_idcs = BiCluster().cluster(pd.DataFrame(json_dict))
-		print(filteredData)
-		cluster_idcs = BiCluster().cluster(filteredData)
-		print(cluster_idcs)
+		cluster_idcs = BiCluster().cluster(filteredData, cacheObject[dataId], numClusters)
+		#print(cluster_idcs)
 		return json.dumps(cluster_idcs)
 
 
-@app.route("/getSubClusters/<cID>", methods=['GET'])
-def getSubClusters(cID):
+@app.route("/getSubClusters/<string:dataId>/<cID>/<int:numClusters>", methods=['GET'])
+def getSubClusters(dataId, cID, numClusters):
 	print(cID)
-	cluster_idcs = BiCluster().subcluster3(cID)
+
+	clusterID_array = [int(x) for x in cID.split('.')]
+
+	for i, cID in enumerate(clusterID_array[0:]):
+		smID = '.'.join(str(x) for x in clusterID_array[:(i + 1)])
+		cluster_idcs = BiCluster().subcluster3(smID, cacheObject[dataId], numClusters)
+
+	#cluster_idcs = BiCluster().subcluster3(cID, cacheObject[dataId], numClusters)
 	return json.dumps(cluster_idcs)
 
 
-@app.route("/removeSubClusters/<string:cID>", methods=['GET'])
-def removeSubClusters(cID):
-	print(cID)
-	cluster_idcs = BiCluster().removeSubClusters3(cID)
+@app.route("/removeSubClusters/<string:dataId>/<string:cID>/<int:numClusters>", methods=['GET'])
+def removeSubClusters(dataId, cID, numClusters):
+	getSubClusters(dataId, cID, numClusters)
+
+	cluster_idcs = BiCluster().removeSubClusters3(cID, cacheObject[dataId])
 	return json.dumps(cluster_idcs)
 
 
-@app.route("/setNumClusters", methods=['POST'])
-def setNumClusters():
-	BiCluster().setNumClusters(request.get_json())
-	return ""
+# @app.route("/setNumClusters", methods=['POST'])
+# def setNumClusters():
+# 	BiCluster().setNumClusters(request.get_json())
+# 	return ""
 
 
 if __name__ == "__main__":
