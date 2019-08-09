@@ -12,3 +12,6 @@
 Pipfile
 Pipfile.lock
 pip-selfcheck.json
+node_modules/
+
+\.idea/
