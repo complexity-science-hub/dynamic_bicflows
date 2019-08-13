@@ -1,6 +1,7 @@
 ﻿# dynamic bic flows
 
-Based on [original code](https://users.cg.tuwien.ac.at/~waldner/bicflows/)  by Daniel Steinböck and Manuela Waldner, TU Wien
+Based on [original code](https://users.cg.tuwien.ac.at/~waldner/bicflows/)  by Daniel Steinböck and Manuela Waldner, TU Wien.
+
 This version features support for arbitrary csv file loading & session handling for the server backend.
 
 ## Getting Started
@@ -11,9 +12,11 @@ These instructions will get you a copy of the project up and running on your loc
 
 ##### Install Python3
 - Download and install [Python](https://www.python.org/downloads/) on your machine.
+
 *You may also have to add the location of python to your `PATH` environment variable.*
 
 - Install pip for Python 3 as described here for [Windows](https://www.liquidweb.com/kb/install-pip-windows/) or [Linux](https://wiki.ubuntuusers.de/pip/).
+
 *You may also have to add the location of pip to your `PATH` environment variable.*
 
 ### Installing
