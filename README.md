@@ -74,9 +74,7 @@ e.g. for Apache site configuration:
 ```
 
 ##### Clear cache
-Datasets are kept in the memory of the server for faster access.
-
-If you host the app on a server, you should create *cronjob* to clear server cache from time to time:
+For faster access datasets are kept in memory. If you host the app on a server, you should create a *cronjob* to clear server cache from time to time:
 
 ```
 */20 * * * * wget -O - http://localhost/bipartite/clearcache >/dev/null 2>&1
