@@ -77,5 +77,5 @@ e.g. for Apache site configuration:
 For faster access datasets are kept in memory. If you host the app on a server, you should create a *cronjob* to clear server cache from time to time:
 
 ```
-*/20 * * * * wget -O - http://localhost/bipartite/clearcache >/dev/null 2>&1
+*/20 * * * * wget -O - http://localhost/dynamic_bicflows/clearcache >/dev/null 2>&1
 ```
