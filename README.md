@@ -27,7 +27,7 @@ In the project's root directory execute the following command to install require
 pip install -r requirements.txt
 ```
 
-Set the environment variable `FLASK_APP` to `server.py`
+Set the `FLASK_APP` environment variable to `server.py`
 
 ###### Linux:
 ```
