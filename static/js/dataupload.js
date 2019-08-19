@@ -36,6 +36,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const formatPreview = document.getElementById('formatPreview');
     const urlInfoModal = document.getElementById('urlInfoModal');
     const urlInfoModalText = document.getElementById('urlInfoModalText');
+    const encrypt = document.getElementById('encrypt');
+    const pwdArea = document.getElementById('pwdArea');
+    const pwd = document.getElementById('pwd');
+
+    encrypt.addEventListener('input', toggleEncrypt, false);
+    toggleEncrypt();
 
     unit.addEventListener('input', updateFormatPreview, false);
     decimals.addEventListener('input', updateFormatPreview, false);
@@ -46,6 +52,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function fileSelected(evt) {
         submitBtn.disabled = false;
+    }
+
+    function toggleEncrypt(evt) {
+        if (encrypt.checked) {
+            pwdArea.classList.remove("hide");
+        } else {
+            pwdArea.classList.add("hide");
+        }
     }
 
     function updateFormatPreview(evt) {
@@ -73,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        formatPreview.innerHTML = res;
+        formatPreview.textContent = res;
     }
 
     function submit(evt) {
@@ -91,6 +105,8 @@ document.addEventListener("DOMContentLoaded", function() {
         sendData.decimals = decimals.value;
         sendData.unitSpace = unitSpace.checked;
         sendData.unitPosition = unitPosition.value;
+        sendData.encrypt = encrypt.checked;
+        sendData.pwd = pwd.value;
 
         console.log(JSON.stringify(sendData));
 

@@ -4,6 +4,7 @@
 
 <head>
   <link rel="stylesheet" href="{{ url_for('static',filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='lib/css/Materialize/materialize.min.css') }}">
 </head>
 
 <body>
@@ -43,6 +44,19 @@
   <!-- <p><small><span id="tooltipsubtotal"></span><small></p> -->
 </div>
 
+<div id="pwdModal" class="modal">
+    <div class="modal-content">
+        <h6>Password required</h6>
+      <div id="pwdArea" class="input-field">
+        <input id="pwd" type="password">
+        <label for="pwd">Password</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+        <button class="modal-close btn waves-effect waves-light" type="submit" name="submit" id="submit">OK</button>
+    </div>
+</div>
+
 <!--libraries-->
 <script src="{{ url_for('static', filename='lib/js/d3.min.js')}}"></script>
 <script src="{{ url_for('static', filename='lib/js/crossfilter.min.js')}}"></script>
@@ -58,6 +72,7 @@
 <!-- <link rel="stylesheet" href="{{ url_for('static',filename='lib/css/dc.css') }}"> -->
 
 <!--scripts-->
+<script type="text/javascript" src="{{ url_for('static', filename='lib/js/materialize.min.js')}}"></script>
 <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 <script src="{{ url_for('static', filename='js/init.js')}}"></script>
 <script src="{{ url_for('static', filename='js/sankey.js')}}"></script>

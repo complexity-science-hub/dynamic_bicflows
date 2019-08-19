@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='lib/css/Materialize/materialize.min.css') }}">
 </head>
 <body>
-<div class="dataupload-wrapper valign-wrapper">
+<div class="dataupload-wrapper">
     <div class="container">
         <div class="row">
             <div class="card">
@@ -26,6 +26,25 @@
                                 <li class="collection-item"><b>Last column:</b> value</li>
                             </ul>
                             e.g.: <b>Group 1;Filter 1;Filter 2;Filter 3;Group 2;Value</b> <i>(naming of columns is irrelevant)</i>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="card">
+                <div class="card-content">
+                  <span class="card-title">Protect data</span>
+                    <form>
+                        <div class="row">
+                            <label>
+                                <input id="encrypt" type="checkbox" class="filled-in"/>
+                                <span>Encrypt</span>
+                            </label>
+                            <div id="pwdArea" class="input-field hide">
+                              <input id="pwd" type="password">
+                              <label for="pwd">Password</label>
+                            </div>
                         </div>
                     </form>
                 </div>

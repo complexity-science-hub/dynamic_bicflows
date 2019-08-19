@@ -60,6 +60,28 @@ var groupedEntitiesName = "grouped entities";
 var pathSegments = window.location.pathname.split('/');
 var dataId = pathSegments[pathSegments.length - 1];
 
+var pwdModalInstance;
+
+pwdModal = document.getElementById('pwdModal');
+pwd = document.getElementById('pwd');
+
+M.Modal.init(pwdModal, {
+        onCloseEnd: function() {
+            d3.json("authorize/" + dataId)
+                .header("Content-Type", "application/json")
+                .post(JSON.stringify({"pwd": pwd.value}), function(d){
+                    location.reload();
+                });
+            pwd.value = "";
+        }
+});
+
+pwd.addEventListener("keyup", function(event) {
+    if (event.key === "Enter") {
+        pwdModalInstance.close();
+    }
+});
+
 d3.queue()
     .defer(d3.json, "getData/" + dataId)
     // .defer(function(d){ d3.json("/setNumClusters").header("Content-Type", "application/json").post(9,function(e){return});},  true)
@@ -99,6 +121,11 @@ function makeGraphs(error, data/*, clusters*/) {
           d3.json("getClusters/" + dataId + "/" + getNumClusters())
             .header("Content-Type", "application/json")
             .post(JSON.stringify(data_filtered), function(d){
+
+                if (!authorizationCheck(data)) {
+                    return;
+                }
+
               //console.log(d);
               // updateAll(d);
               spinner.stop();
@@ -135,8 +162,23 @@ function checkData(data) {
         return false;
     }
 
+    if (!authorizationCheck(data)) {
+        return false;
+    }
+
     if (Object.keys(data[0]).length < 3) {
         alert("Data error: at least 3 columns are required [Group1;...;Group2;Value]");
+
+        return false;
+    }
+
+    return true;
+}
+
+function authorizationCheck(data) {
+    if (data['authorized'] == false) {
+        pwdModalInstance = M.Modal.getInstance(pwdModal);
+        pwdModalInstance.open();
 
         return false;
     }
@@ -387,9 +429,14 @@ function filterData(data){
       });
 
     // if(barchart.hasSelections() || barchart_law.hasSelections()){
+
       d3.json("getClusters/" + dataId + "/" + getNumClusters())
         .header("Content-Type", "application/json")
         .post(JSON.stringify(data_filtered), function(d){
+            if (!authorizationCheck(d)) {
+                return;
+            }
+
           // console.log(d);
           sankeychart.openClustersF(["Home"]);
 

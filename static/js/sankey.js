@@ -232,8 +232,15 @@ function sankey(data){
             d3.json("getClusters/" + dataId + "/" + getNumClusters())
               .header("Content-Type", "application/json")
               .post(JSON.stringify(data_filtered), function(c) {
+
+                if (!authorizationCheck(c)) {
+                 return;
+                }
+
                 d3.json("removeSubClusters/" + dataId + "/" + cID + "/" + getNumClusters(), function (f) {
-                  console.log("clicked for removeSubClusters 2");
+                  if (!authorizationCheck(f)) {
+                      return;
+                  }
                   while (openClusters[openClusters.length - 1] != oldcID) {
                     g.select("#cb" + openClusters.pop().replace(/\./g, '')).remove();
                   }
@@ -517,8 +524,6 @@ function sankey(data){
   function click(d){
     if(d.key == "Sonstige") return;
 
-    console.log("clicked for getSubClusters");
-
     selected = false;
     openClusters.push(d.key);
     spinner.spin(document.getElementById("mainview"));
@@ -536,7 +541,16 @@ function sankey(data){
     d3.json("getClusters/" + dataId + "/" + getNumClusters())
         .header("Content-Type", "application/json")
         .post(JSON.stringify(data_filtered), function(c){
+
+          if (!authorizationCheck(c)) {
+                return;
+            }
+
            d3.json("getSubClusters/" + dataId + "/" + d.key + "/" + getNumClusters(), function(f){
+             if (!authorizationCheck(f)) {
+                return;
+            }
+
             spinner.stop();
             update(f);
           });

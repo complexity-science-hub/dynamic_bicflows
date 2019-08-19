@@ -13,3 +13,5 @@ class DataSet(persistent.Persistent):
         self.unitPosition = data["unitPosition"];
         self.creationDateTime = datetime.datetime.now()
         self.lastRequestDateTime = datetime.datetime.now()
+        self.encrypt = data["encrypt"]
+        self.hashedPwd = data["pwd"]
