@@ -3,7 +3,7 @@ import datetime
 import BTrees
 import transaction
 from flask import Flask, render_template, request, session
-from flask_session import Session
+#from flask_session import Session
 import json
 import pandas as pd
 from BiCluster import *
@@ -27,8 +27,8 @@ app.debug = True
 
 app.secret_key = uuid.uuid4().hex
 
-app.config['SESSION_TYPE'] = 'filesystem'
-Session(app)
+#app.config['SESSION_TYPE'] = 'filesystem'
+#Session(app)
 
 cacheObject = {}
 
@@ -43,10 +43,11 @@ if not hasattr(dbRoot, 'dataSets'):
 	dbRoot.dataSets = BTrees.OOBTree.BTree()
 
 
-@app.before_request
-def make_session_permanent():
-	session.permanent = True
-	app.permanent_session_lifetime = timedelta(minutes=sessionCacheTimeout)
+#@app.before_request
+#def make_session_permanent():
+#	session.permanent = True
+#	app.permanent_session_lifetime = timedelta(minutes=sessionCacheTimeout)
+#	app.permanent_session_lifetime = timedelta(minutes=sessionCacheTimeout)
 
 
 @app.route("/", methods=['GET', 'POST'])
