@@ -8,6 +8,7 @@ var xf,
 var firstGroupIndex = null;
 var secondGroupIndex = null;
 var valueIndex = null;
+var customClustering = false;
 
 var valueFormat = null;
 
@@ -92,6 +93,8 @@ function makeGraphs(error, data/*, clusters*/) {
     if (!checkData(data)) {
         return;
     }
+
+    data = data["data"];
   //console.log(data);
   // console.log(clusters)
   // spinner.stop();
@@ -151,6 +154,8 @@ function makeGraphs(error, data/*, clusters*/) {
 }
 
 function checkData(data) {
+    console.log(data);
+
     if (data.length == 0) {
         alert("Data error: empty data file");
 
@@ -166,8 +171,26 @@ function checkData(data) {
         return false;
     }
 
-    if (Object.keys(data[0]).length < 3) {
+    if (!('data' in data)) {
+        alert("Data error: no data available");
+        return false;
+    }
+
+    if (!('customClustering' in data)) {
+        alert("Data error: clustering information missing");
+        return false;
+    }
+
+    customClustering = data['customClustering'];
+
+    if (!customClustering && Object.keys(data["data"][0]).length < 3) {
         alert("Data error: at least 3 columns are required [Group1;...;Group2;Value]");
+
+        return false;
+    }
+
+    if (customClustering && Object.keys(data["data"][0]).length < 4) {
+        alert("Data error: at least 4 columns are required [Group1;...;Group2;Value;Cluster]");
 
         return false;
     }
@@ -190,6 +213,9 @@ function createFilterDims(data) {
     filterColumns = Object.keys(data[0]);
 
     filterColumns.shift();    // remove group 1
+    if (customClustering) {
+        filterColumns.pop();    // remove cluster
+    }
     filterColumns.pop();      // remove value
     filterColumns.pop();      // remove group 2
 
@@ -437,12 +463,19 @@ function filterData(data){
                 return;
             }
 
+            console.log("filter openclusters before");
+            console.log(sankeychart.openClusters);
+
           // console.log(d);
           sankeychart.openClustersF(["Home"]);
+
+          console.log("filter openclusters after");
+            console.log(sankeychart.openClusters);
 
           updateAll(d);
           spinner.stop();
         });
+
     // }
     // else{
     //   updateAll(allClusters);
@@ -593,7 +626,11 @@ function getFirst(d) {
 function getSecond(d) {
     if (secondGroupIndex == null) {
         var dKeys = Object.keys(d);
-        secondGroupIndex = dKeys[dKeys.length - 2];
+        if (customClustering) {
+            secondGroupIndex = dKeys[dKeys.length - 3];
+        } else {
+            secondGroupIndex = dKeys[dKeys.length - 2];
+        }
     }
 
     return d[secondGroupIndex];
@@ -602,7 +639,12 @@ function getSecond(d) {
 function getValue(d) {
     if (valueIndex == null) {
         var dKeys = Object.keys(d);
-        valueIndex = dKeys[dKeys.length - 1];
+
+        if (customClustering) {
+            valueIndex = dKeys[dKeys.length - 2];
+        } else {
+            valueIndex = dKeys[dKeys.length - 1];
+        }
     }
 
     return d[valueIndex];

@@ -3,9 +3,11 @@ import datetime
 import BTrees
 import transaction
 from flask import Flask, render_template, request, session
+from flask_session import Session
 import json
 import pandas as pd
 from BiCluster import *
+from CustomCluster import *
 import ZODB, ZODB.FileStorage
 import dataset
 import uuid
@@ -15,6 +17,8 @@ from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto import Random
 from io import StringIO
+from datetime import timedelta
+import sessionData
 
 import hashlib, binascii, os
 
@@ -23,6 +27,9 @@ app.debug = True
 
 app.secret_key = uuid.uuid4().hex
 
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
+
 cacheObject = {}
 
 curPath = os.path.dirname(__file__)
@@ -30,8 +37,16 @@ curPath = os.path.dirname(__file__)
 connection = ZODB.connection(os.path.join(curPath, 'database/db.fs'))
 dbRoot = connection.root
 
+sessionCacheTimeout = 30
+
 if not hasattr(dbRoot, 'dataSets'):
 	dbRoot.dataSets = BTrees.OOBTree.BTree()
+
+
+@app.before_request
+def make_session_permanent():
+	session.permanent = True
+	app.permanent_session_lifetime = timedelta(minutes=sessionCacheTimeout)
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -64,6 +79,8 @@ def authorize(dataId):
 
 		pwd = receivedData["pwd"]
 
+		sd = getSessionData(dataId)
+
 		if hasattr(dbRoot.dataSets[dataId], "encrypt") and dbRoot.dataSets[dataId].encrypt:
 			authorized = verify_password(dbRoot.dataSets[dataId].hashedPwd, pwd)
 
@@ -75,11 +92,17 @@ def authorize(dataId):
 				cacheObject[dataId]["encrypt"] = True
 				cacheObject[dataId]["dataset"] = getDecryptedDataset(cacheObject[dataId], pwd)
 
+				customClustering = hasattr(dbRoot.dataSets[dataId], "customClustering") and dbRoot.dataSets[dataId].customClustering
+				cacheObject[dataId]["customClustering"] = customClustering
+				sd.customClustering = customClustering
+
 			updateLastRequest(dataId)
 		else:
 			authorized = True
 
-		session[dataId] = authorized
+
+		sd.authorized = True
+		setSessionData(dataId, sd)
 
 		return json.dumps({"authorized": authorized})
 	else:
@@ -89,7 +112,8 @@ def authorize(dataId):
 def isAuthorized(dataId):
 	if dbRoot.dataSets.has_key(dataId):
 		if hasattr(dbRoot.dataSets[dataId], "encrypt") and dbRoot.dataSets[dataId].encrypt:
-			return session.get(dataId, False) and (dataId in cacheObject)
+			sd = getSessionData(dataId)
+			return sd.authorized and (dataId in cacheObject)
 
 		return True
 
@@ -135,6 +159,7 @@ def getDataSets():
 	res = "<table border='1'><tr>"
 	res = res + "<th>ID</th>"
 	res = res + "<th>originalFilename</th>"
+	res = res + "<th>customClustering</th>"
 	res = res + "<th>creationDateTime</th>"
 	res = res + "<th>lastRequestDateTime</th>"
 	res = res + "<th>currently cached</th>"
@@ -145,6 +170,12 @@ def getDataSets():
 		res = res + "<tr>"
 		res = res + "<td><a href='./" + dataSet + "'>" + dataSet + "</a></td>"
 		res = res + "<td>" + dbRoot.dataSets[dataSet].originalFilename + "</td>"
+
+		if (hasattr(dbRoot.dataSets[dataSet], "customClustering") and dbRoot.dataSets[dataSet].customClustering):
+			res = res + '<td align="center">x</td>'
+		else:
+			res = res + "<td></td>"
+
 		res = res + "<td>" + dbRoot.dataSets[dataSet].creationDateTime.strftime("%m/%d/%Y, %H:%M:%S") + "</td>"
 		res = res + "<td>" + dbRoot.dataSets[dataSet].lastRequestDateTime.strftime("%m/%d/%Y, %H:%M:%S") + "</td>"
 
@@ -172,7 +203,7 @@ def clearDataCache():
 	res = ""
 
 	for dataSet in dbRoot.dataSets:
-		if dbRoot.dataSets[dataSet].lastRequestDateTime < datetime.datetime.now() - datetime.timedelta(minutes=2):
+		if dbRoot.dataSets[dataSet].lastRequestDateTime < datetime.datetime.now() - datetime.timedelta(minutes=sessionCacheTimeout):
 			if (dataSet in cacheObject):
 				del cacheObject[dataSet]
 
@@ -227,7 +258,8 @@ def getData(dataId):
 
 	if (dataId in cacheObject):
 		#return getDecryptedDataset(cacheObject[dataId], pwd).to_json(orient='records')
-		return cacheObject[dataId]["dataset"].to_json(orient='records')
+		#return cacheObject[dataId]["dataset"].to_json(orient='records')
+		return json.dumps({"customClustering": cacheObject[dataId]["customClustering"], "data": cacheObject[dataId]["dataset"].to_dict(orient='records')})
 
 	if dbRoot.dataSets.has_key(dataId):
 		if hasattr(dbRoot.dataSets[dataId], "encrypt") and dbRoot.dataSets[dataId].encrypt:
@@ -235,17 +267,25 @@ def getData(dataId):
 
 		cacheObject[dataId] = {}
 
-		cacheObject[dataId]["dataset"] = pd.read_csv(dbRoot.dataSets[dataId].file, ";")
-		cacheObject[dataId]["dataset"] = prepareDataset(cacheObject[dataId]["dataset"])
-		cacheObject[dataId]["encrypt"] = False
+		customClustering = hasattr(dbRoot.dataSets[dataId], "customClustering") and dbRoot.dataSets[dataId].customClustering
 
-		return cacheObject[dataId]["dataset"].to_json(orient='records')
+		cacheObject[dataId]["dataset"] = pd.read_csv(dbRoot.dataSets[dataId].file, ";")
+		cacheObject[dataId]["dataset"] = prepareDataset(cacheObject[dataId]["dataset"], customClustering)
+		cacheObject[dataId]["encrypt"] = False
+		cacheObject[dataId]["customClustering"] = customClustering
+
+		sd = getSessionData(dataId)
+		sd.customClustering = customClustering
+		setSessionData(dataId, sd)
+
+		#return cacheObject[dataId]["dataset"].to_json(orient='records')
+		return json.dumps({"customClustering": customClustering, "data": cacheObject[dataId]["dataset"].to_dict(orient='records')})
 	else:
 		return json.dumps({"errorCode": 1, "message": "Dataset with id " + dataId + " not found"})
 
 
 @app.route("/getClusters/<string:dataId>/<int:numClusters>", methods=['GET', 'POST'])
-def getClusters(dataId, numClusters):
+def getClusters(dataId, numClusters, tempMem = {}):
 	if not isAuthorized(dataId):
 		return json.dumps({"authorized": False})
 
@@ -254,21 +294,21 @@ def getClusters(dataId, numClusters):
 	updateLastRequest(dataId)
 
 	if request.method == 'GET':
-		cluster_idcs = BiCluster().cluster(cacheObject[dataId]["dataset"], cacheObject[dataId], numClusters)
-		# json.dump(cluster_idcs, open("static/data/data.json", 'w'))
-		# cluster_idcs = json.load(open("static/data/data.json"))
-		return json.dumps(cluster_idcs)
+		filteredData = cacheObject[dataId]["dataset"]
 	else:
 		json_dict = request.get_json()
-		filteredData = BiCluster().filterData(cacheObject[dataId]["dataset"], json_dict)
-		# cluster_idcs = BiCluster().cluster(pd.DataFrame(json_dict))
-		cluster_idcs = BiCluster().cluster(filteredData, cacheObject[dataId], numClusters)
-		#print(cluster_idcs)
-		return json.dumps(cluster_idcs)
+		filteredData = filterData(cacheObject[dataId]["dataset"], json_dict)
+
+	if cacheObject[dataId]["customClustering"]:
+		cluster_idcs = CustomCluster().cluster(filteredData, tempMem, numClusters)
+	else:
+		cluster_idcs = BiCluster().cluster(filteredData, tempMem, numClusters)
+
+	return json.dumps(cluster_idcs)
 
 
-@app.route("/getSubClusters/<string:dataId>/<cID>/<int:numClusters>", methods=['GET'])
-def getSubClusters(dataId, cID, numClusters):
+@app.route("/getSubClusters/<string:dataId>/<cID>/<int:numClusters>", methods=['POST'])
+def getSubClusters(dataId, cID, numClusters, tempMem = {}):
 	if not isAuthorized(dataId):
 		return json.dumps({"authorized": False})
 
@@ -278,29 +318,46 @@ def getSubClusters(dataId, cID, numClusters):
 
 	clusterID_array = [int(x) for x in cID.split('.')]
 
+	getClusters(dataId, numClusters, tempMem)
+
 	for i, cID in enumerate(clusterID_array[0:]):
 		smID = '.'.join(str(x) for x in clusterID_array[:(i + 1)])
-		cluster_idcs = BiCluster().subcluster3(smID, cacheObject[dataId], numClusters)
+		cluster_idcs = BiCluster().subcluster3(smID, tempMem, numClusters)
 
 	#cluster_idcs = BiCluster().subcluster3(cID, cacheObject[dataId], numClusters)
 	return json.dumps(cluster_idcs)
 
 
-@app.route("/removeSubClusters/<string:dataId>/<string:cID>/<int:numClusters>", methods=['GET'])
+@app.route("/removeSubClusters/<string:dataId>/<string:cID>/<int:numClusters>", methods=['POST'])
 def removeSubClusters(dataId, cID, numClusters):
 	if not isAuthorized(dataId):
 		return json.dumps({"authorized": False})
 
-	getSubClusters(dataId, cID, numClusters)
+	tempMem = {}
+	getSubClusters(dataId, cID, numClusters, tempMem)
 
-	cluster_idcs = BiCluster().removeSubClusters3(cID, cacheObject[dataId])
+	cluster_idcs = BiCluster().removeSubClusters3(cID, tempMem)
+
 	return json.dumps(cluster_idcs)
 
 
-def prepareDataset(data):
+def filterData(data, filters):
+	data_tmp = data.copy()
+	for f in filters:
+		data_tmp = data_tmp[data_tmp[f].isin(filters[f])]
+
+	return data_tmp
+
+
+def prepareDataset(data, customClustering):
 	dataKeys = data.keys();
+
 	firstGroupIndex = dataKeys[0]
-	secondGroupIndex = dataKeys[len(dataKeys) - 2]
+
+	if customClustering:
+		secondGroupIndex = dataKeys[len(dataKeys) - 3]
+	else:
+		secondGroupIndex = dataKeys[len(dataKeys) - 2]
 
 	data[firstGroupIndex] = data[firstGroupIndex].astype(str)
 	data[secondGroupIndex] = data[secondGroupIndex].astype(str)
@@ -312,7 +369,9 @@ def getDecryptedDataset(data, pwd):
 		decrypted = StringIO(decrypt(bytes(pwd, "utf-8"), data["dataset"], False).decode("utf-8"))
 		decrypted = pd.read_csv(decrypted, sep=";")
 
-		decrypted = prepareDataset(decrypted)
+		customClustering = hasattr(data, "customClustering") and data.customClustering
+
+		decrypted = prepareDataset(decrypted, customClustering)
 
 		return decrypted
 
@@ -364,6 +423,15 @@ def updateLastRequest(dataId):
 	if dbRoot.dataSets.has_key(dataId):
 		dbRoot.dataSets[dataId].lastRequestDateTime = datetime.datetime.now()
 		transaction.commit()
+
+def getSessionData(dataId):
+		if dataId in session:
+			return sessionData.SessionData().fromJSON(session[dataId])
+		else:
+			return sessionData.SessionData()
+
+def setSessionData(dataId, sessionData):
+	session[dataId] = sessionData.toJSON()
 
 # @app.route("/setNumClusters", methods=['POST'])
 # def setNumClusters():

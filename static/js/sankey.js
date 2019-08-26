@@ -221,6 +221,10 @@ function sankey(data){
           .attr('height', d=>d.height)
           .style("fill-opacity", 0)
           .on("click", function(e){
+            if (customClustering) {
+              return;
+            }
+
             spinner.spin(document.getElementById("mainview"));
 
             var data_filtered = {};
@@ -229,25 +233,29 @@ function sankey(data){
                 data_filtered[filterColumn] = barCharts[filterColumn].getSelections();
             });
 
-            d3.json("getClusters/" + dataId + "/" + getNumClusters())
+            /*d3.json("getClusters/" + dataId + "/" + getNumClusters())
               .header("Content-Type", "application/json")
               .post(JSON.stringify(data_filtered), function(c) {
 
                 if (!authorizationCheck(c)) {
                  return;
-                }
+                }*/
 
-                d3.json("removeSubClusters/" + dataId + "/" + cID + "/" + getNumClusters(), function (f) {
-                  if (!authorizationCheck(f)) {
+              d3.json("removeSubClusters/" + dataId + "/" + cID + "/" + getNumClusters())
+                  .header("Content-Type", "application/json")
+                  .post(JSON.stringify(data_filtered), function (f) {
+                    if (!authorizationCheck(f)) {
                       return;
-                  }
-                  while (openClusters[openClusters.length - 1] != oldcID) {
-                    g.select("#cb" + openClusters.pop().replace(/\./g, '')).remove();
-                  }
-                  update(f, true);
-                  spinner.stop();
-                })
-              })
+                    }
+                    while (openClusters[openClusters.length - 1] != oldcID) {
+                      g.select("#cb" + openClusters.pop().replace(/\./g, '')).remove();
+                    }
+                    update(f, true);
+                    spinner.stop();
+                  });
+              /*})*/
+
+
           });
 
       //change opacities
@@ -522,6 +530,10 @@ function sankey(data){
   }
 
   function click(d){
+    if (customClustering) {
+      return;
+    }
+
     if(d.key == "Sonstige") return;
 
     selected = false;
@@ -538,24 +550,26 @@ function sankey(data){
         data_filtered[filterColumn] = barCharts[filterColumn].getSelections();
     });
 
-    d3.json("getClusters/" + dataId + "/" + getNumClusters())
+    /*d3.json("getClusters/" + dataId + "/" + getNumClusters())
         .header("Content-Type", "application/json")
         .post(JSON.stringify(data_filtered), function(c){
 
           if (!authorizationCheck(c)) {
                 return;
-            }
+            }*/
 
-           d3.json("getSubClusters/" + dataId + "/" + d.key + "/" + getNumClusters(), function(f){
-             if (!authorizationCheck(f)) {
-                return;
+      d3.json("getSubClusters/" + dataId + "/" + d.key + "/" + getNumClusters())
+          .header("Content-Type", "application/json")
+          .post(JSON.stringify(data_filtered), function (f) {
+            if (!authorizationCheck(f)) {
+              return;
             }
 
             spinner.stop();
             update(f);
           });
-        }
-    );
+        /*}
+    );*/
   }
 
   /*

@@ -39,6 +39,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const encrypt = document.getElementById('encrypt');
     const pwdArea = document.getElementById('pwdArea');
     const pwd = document.getElementById('pwd');
+    const customClustering = document.getElementById('custom_clustering');
+    const headerNoCustomClustering = document.getElementById('header-no-custom-clustering');
+    const headerCustomClustering = document.getElementById('header-custom-clustering');
+
+    customClustering.addEventListener('input', toggleCustomClustering, false);
+    toggleCustomClustering();
 
     encrypt.addEventListener('input', toggleEncrypt, false);
     toggleEncrypt();
@@ -52,6 +58,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function fileSelected(evt) {
         submitBtn.disabled = false;
+    }
+
+    function toggleCustomClustering(evt) {
+        if (customClustering.checked) {
+            headerNoCustomClustering.classList.add("hide");
+            headerCustomClustering.classList.remove("hide");
+        } else {
+            headerNoCustomClustering.classList.remove("hide");
+            headerCustomClustering.classList.add("hide");
+        }
     }
 
     function toggleEncrypt(evt) {
@@ -107,12 +123,10 @@ document.addEventListener("DOMContentLoaded", function() {
         sendData.unitPosition = unitPosition.value;
         sendData.encrypt = encrypt.checked;
         sendData.pwd = pwd.value;
-
-        console.log(JSON.stringify(sendData));
+        sendData.customClustering = customClustering.checked;
 
         reader.onload = function(fileData) {
           sendData.fileData = fileData.target.result;
-
 
           d3.json("createDataset")
             .header("Content-Type", "application/json")

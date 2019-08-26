@@ -15,3 +15,4 @@ class DataSet(persistent.Persistent):
         self.lastRequestDateTime = datetime.datetime.now()
         self.encrypt = data["encrypt"]
         self.hashedPwd = data["pwd"]
+        self.customClustering = data["customClustering"]

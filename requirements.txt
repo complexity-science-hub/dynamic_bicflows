@@ -9,3 +9,4 @@ coclust==0.2.1
 ZODB==5.5.1
 BTrees==4.6.0
 pycryptodome==3.8.2
+Flask-Session==0.3.1
