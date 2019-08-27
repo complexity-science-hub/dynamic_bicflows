@@ -125,11 +125,9 @@ function makeGraphs(error, data/*, clusters*/) {
             .header("Content-Type", "application/json")
             .post(JSON.stringify(data_filtered), function(d){
 
-                if (!authorizationCheck(data)) {
+                if (!authorizationCheck(d)) {
                     return;
                 }
-
-              //console.log(d);
               // updateAll(d);
               spinner.stop();
 
@@ -154,8 +152,6 @@ function makeGraphs(error, data/*, clusters*/) {
 }
 
 function checkData(data) {
-    console.log(data);
-
     if (data.length == 0) {
         alert("Data error: empty data file");
 

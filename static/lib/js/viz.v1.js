@@ -254,6 +254,32 @@
       floorMainBars(); // ensure that main bars is atleast of size mi.n
       // calculateHistograms("primary");
 
+      while (mainBars.secondary.length > mainBars.primary.length) {
+        mainBars.primary.push({
+            x:0
+            ,y:0
+            ,height:0
+            ,width: 0
+            ,part: "primary"
+            ,key:""
+            ,value:0
+            ,percent:0
+        });
+      }
+
+      while (mainBars.primary.length > mainBars.secondary.length) {
+        mainBars.secondary.push({
+            x:0
+            ,y:0
+            ,height:0
+            ,width: 0
+            ,part: "secondary"
+            ,key:""
+            ,value:0
+            ,percent:0
+        });
+      }
+
       returnObj = {
         mainBars:mainBars.primary.concat(mainBars.secondary)
         ,subBars:subBars.primary.concat(subBars.secondary)
@@ -371,6 +397,7 @@
         .rollup(function(d){ return d3.sum(d,v); })
         .entries(bP.data())
         ;
+
         // sort descending
         if(mb == undefined){
           if(part == "primary"){
@@ -424,10 +451,11 @@
 
         var ps = d3.nest()
         .key(part=="primary"? bP.keyPrimary():bP.keySecondary())
-        // .sortKeys(part=="primary"? bP.sortPrimary():bP.sortSecondary())
+        //.sortKeys(part=="primary"? bP.sortPrimary():bP.sortSecondary())
         .key(part=="secondary"? bP.keyPrimary():bP.keySecondary())
-        // .sortKeys(part=="secondary"? bP.sortPrimary():bP.sortSecondary())
-        .rollup(function(d){ return d3.sum(d,v); })
+        //.sortKeys(part=="secondary"? bP.sortPrimary():bP.sortSecondary())
+        .rollup(function(d){
+            return d3.sum(d,v); })
         .entries(bP.data());
 
         var pArray = mainBars.primary.map(function(d){return d.key;});
