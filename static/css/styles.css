@@ -160,6 +160,16 @@ html, body {
   cursor: pointer;
 }
 
+.mainBars .label{
+  font: 12px sans-serif;
+  stroke: none;
+  fill-opacity: 1;
+  font-weight: bold;
+  cursor: pointer;
+  transform: translateZ(0) rotate(-90deg);
+  text-anchor: middle;
+}
+
 /*contextBars*/
 .contextBars rect{
   stroke-width: 0;

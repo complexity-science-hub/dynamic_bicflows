@@ -122,7 +122,19 @@ function sankey(data){
   	.on("mouseout",mouseout)
     .on("mousemove",mousemove)
     .on("dblclick",click)
-    .on("click",function(d){ selected = selected ? false : d; mouseover(d)})
+    .on("click",function(d){ selected = selected ? false : d; mouseover(d)});
+
+  if (customClustering) {
+    g.selectAll(".mainBars")
+        .append("mask").attr("id",  function(d) { return "mask_" + d.key + "_" + d.part})
+        // we have to swap x and y because the mask somehow does not take care of the 90deg rotation of the label
+    .append("rect").attr("y", function(d) {return -d.width}).attr("x",  function(d) {return -d.height + bp.clusterLabelPad()}).attr("height", function(d) {return d.width * 2}).attr("width",  function(d) {return Math.max(0, d.height - bp.clusterLabelPad()) * 2}).attr("style", "fill-opacity: 1; fill: white");
+
+    g.selectAll(".mainBars")
+        .append("text").attr("class","label").attr("class", "label")
+        .attr("mask", function(d) { return "url(#mask_" + d.key + "_" + d.part + ")"})
+        .text(function(d) { return d.key});
+  }
 
   g.selectAll(".histogramBars").select("rect")
     .on("mousemove", mouseoverHistogram)
@@ -458,7 +470,11 @@ function sankey(data){
       updateToolTip(d3.event, format(d.value)+" / "+format(d.value/d.percent), d3.format(".2%")(d.percent));
     }
     else
-      updateToolTip(d3.event, format(d.value), "");
+      if (customClustering) {
+        updateToolTip(d3.event, d.key, format(d.value));
+      } else {
+        updateToolTip(d3.event, format(d.value), "");
+      }
       // updateToolTip(d3.event, "Cluster "+d.key, format(d.value));
   }
 

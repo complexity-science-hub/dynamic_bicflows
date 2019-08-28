@@ -4,7 +4,7 @@
   viz.bP = function(){
     var key_scale, value_scale
     ,keyPrimary, keySecondary, value
-    ,width, height, orient, barSize, min, pad
+    ,width, height, orient, barSize, min, pad, clusterLabelPad
     ,data, fill, g, edgeOpacity, duration
     ,sortPrimary, sortSecondary, edgeMode
     ,histogramData, dataComplete
@@ -223,6 +223,11 @@
     bP.pad = function(_){
       if(!arguments.length) return typeof pad !== "undefined" ? pad : 0;
       pad = _;
+      return bP;
+    }
+    bP.clusterLabelPad = function(_){
+      if(!arguments.length) return typeof clusterLabelPad !== "undefined" ? clusterLabelPad : 10;
+      clusterLabelPad = _;
       return bP;
     }
     bP.duration = function(_){
@@ -793,12 +798,15 @@
         g.selectAll(".mainBars").data(newbars.mainBars)
         .transition().duration(bP.duration())
         .attr("transform", function(d){ return "translate("+d.x+","+d.y+")";})
-        .select("rect").attr("x",fx).attr("y",fy).attr("width",fw).attr("height",fh)
+        .select("rect").attr("x",fx).attr("y",fy).attr("width",fw).attr("height",fh);
 
-        // g.selectAll(".histogramBars").data(newbars.histogramBars)
-        // .transition().duration(bP.duration())
-        // .attr("transform", function(d){ return "translate("+d.x+","+d.y+")";})
-        // .select("rect").attr("x",fhx).attr("y",fhy).attr("width",fhw).attr("height",fhh)
+
+        if (customClustering) {
+          g.selectAll(".mainBars")
+              .select("mask").select("rect")//.attr("style", "fill-opacity: 1; fill: blue")
+              .transition().duration(bP.duration())
+             .attr("y", function(d) {return -d.width}).attr("x",  function(d) {return -d.height + bP.clusterLabelPad()}).attr("height", function(d) {return d.width * 2}).attr("width",  function(d) {return Math.max(0, d.height - bP.clusterLabelPad()) * 2})
+        }
 
         hb = g.selectAll(".histogramBars").data(newbars.histogramBars, function(d){return d.id;})
 
@@ -852,6 +860,16 @@
         .transition().duration(bP.duration())
         .attr("transform", function(d){ return "translate("+d.x+","+d.y+")";})
         .select("rect").attr("x",fx).attr("y",fy).attr("width",fw).attr("height",fh);
+
+        if (customClustering) {
+          g.selectAll(".mainBars")
+              .select("mask").select("rect")//.attr("style", "fill-opacity: 1; fill: blue")
+              .transition().duration(bP.duration())
+              .attr("y", function(d) {return -d.width}).attr("x",  function(d) {return -d.height + bP.clusterLabelPad()}).attr("height", function(d) {return d.width * 2}).attr("width",  function(d) {return Math.max(0, d.height - bP.clusterLabelPad()) * 2})
+              // we have to swap x and y because the mask somehow does not take care of the 90deg rotation of the label
+          //.append("rect").attr("y", function(d) {return -d.width}).attr("x",  function(d) {return -d.height + labelPad}).attr("height", function(d) {return d.width * 2}).attr("width",  function(d) {return Math.max(0, d.height - labelPad) * 2}).attr("style", "fill-opacity: 1; fill: white");
+
+        }
 
         // g.selectAll(".histogramBars").data(newbars.histogramBars)
         // .transition().duration(bP.duration())

@@ -589,7 +589,7 @@ function updateToolTip(e, title, sum, subtotal) {
   d3.select("#tooltip")
     .style("top", top+"px")
     .style("left", left+"px");
-
+  
   $("#tooltiptitle").text(title);
   // $("#tooltipsubtotal").text(subtotal);
   $("#tooltipsum").text(sum);
