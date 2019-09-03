@@ -579,21 +579,27 @@ function back(){
 }*/
 
 function updateToolTip(e, title, sum, subtotal) {
-  var top = e.pageY+10;
+  var top = e.pageY;//+10;
   var left = e.pageX+10;
-  if((document.getElementById("mainview").offsetWidth - left) < 110 )
+  /*if((document.getElementById("mainview").offsetWidth - left) < 110 )
     left -= 150;
   if((document.getElementById("mainview").offsetHeight - top) < 60 )
-    top -= 60;
+    top -= 60;*/
+
+  var tooltipTitleEl = $("#tooltiptitle");
+  tooltipTitleEl.text(title);
+  // $("#tooltipsubtotal").text(subtotal);
+  $("#tooltipsum").text(sum);
+  $("#tooltip").show();
+
+  if((document.getElementById("mainview").offsetWidth - left) < 110 )
+    left -= 150;
+  if((document.getElementById("mainview").offsetHeight - $("#tooltip").height() - top) < 20 )
+    top = document.getElementById("mainview").offsetHeight - $("#tooltip").height() - 20;//$("#tooltip").height();*/
 
   d3.select("#tooltip")
     .style("top", top+"px")
     .style("left", left+"px");
-  
-  $("#tooltiptitle").text(title);
-  // $("#tooltipsubtotal").text(subtotal);
-  $("#tooltipsum").text(sum);
-  $("#tooltip").show();
 }
 
 /*function changeData(i){

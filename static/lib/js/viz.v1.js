@@ -324,8 +324,15 @@
           x0 = 0;
           x1 = d3.sum(elements.values());
           others = [];
+
+          var mbHeight = 2*mb.height;
+          // var lineSpace = 10;
+          // var fontsize = parseFloat($("label").css("font-size")) + lineSpace;
+          var maxLabels = Math.round(mbHeight/(fontsize));
+          var nbrLabels = 0;
+
           for(i=0;i<sortedElements.length;i++){
-            if( y(sortedElements[i].value) >= 2){
+            if( y(sortedElements[i].value) >= 2 && nbrLabels < maxLabels - 1){
               xx = [];
               x0 = x1 - sortedElements[i].value;
               xx.push(sortedElements[i]);
@@ -333,6 +340,8 @@
               xx["x1"] = x1;
               bins2.push(xx);
               x1 = x0;
+
+              nbrLabels++;
             }
             else{
               others.push(sortedElements[i]);
@@ -345,11 +354,11 @@
 
           // console.log("bins2",mb,mb.key,mb.part,mb.value,bins2);
 
-          var mbHeight = 2*mb.height;
+        /*  var mbHeight = 2*mb.height;
           // var lineSpace = 10;
           // var fontsize = parseFloat($("label").css("font-size")) + lineSpace;
-          var maxLabels = Math.round(mbHeight/(fontsize));
-          var nbrLabels = 0;
+          var maxLabels = Math.round(mbHeight/(fontsize));*/
+          nbrLabels = 0;
           // var otherLabels = 0;
           // var label = "";
 
@@ -371,12 +380,23 @@
               // }
               // else
               //   label = null;
+
+              /*if (mb.height != 0 && (nbrLabels < maxLabels || nbrLabels == 0)) {
+                if (bin.length==1) {
+                  bin[0].key
+                } else {
+                  "["+bin[0].key+", ...]"
+                }
+              } else {
+                null
+              } //label*/
+
               histogramBars[part].push({
                 x:mb.x
                 ,y:mb.y
                 ,dx:part=="primary" ? -mb.width-x(1) : mb.width //-mb.width-x(bin.length) : mb.width
                 ,dy:mb.height-y(bin.x1)//-mb.height+y(bin.x0)//mb.height-y(bin.x1)// - y(bin.x0)) //-mb.height+y(bin.x0)
-                ,height:Math.abs(y(bin.x1) - y(bin.x0))
+                ,height:Math.abs(y(bin.x1) - y(bin.x0))//Math.abs(y(bin.x1) - y(bin.x0))
                 // ,totalHeight:2*mb.height
                 ,width:x(1) //x(bin.length)
                 ,part:part
@@ -563,6 +583,21 @@
 
         hb.forEach(function(bar){
           elements = bar.elements;
+
+          var other = "";
+
+          if (elements.length > 1) {
+            var separator = "";
+            elements.forEach(function(e) {
+              if (orgs.has(e.key)) {
+                other += separator + e.key;
+                separator = ", ";
+              }
+            });
+          } else {
+            other = elements[0].key;
+          }
+
             if(elements.some(function(d){ return orgs.has(d.key) })){
               selectionBars.push({
                 x:bar.x
@@ -575,7 +610,7 @@
                 ,width:bar.width
                 ,sum:(elements.length == 1) ? orgs.get(elements[0].key) : d3.sum(elements, function(e){ if(orgs.has(e.key)) return orgs.get(e.key); })
                 ,key:bar.key
-                ,other: (elements.length == 1) ? elements[0].key : d3.sum(elements, function(e){ if(orgs.has(e.key)) return 1; })+ " " + groupedEntitiesName
+                ,other: other//(elements.length == 1) ? elements[0].key : d3.sum(elements, function(e){ if(orgs.has(e.key)) return 1; })+ " " + groupedEntitiesName
                 // ,barHeight:bar.height
               });
               // bar.subtotal = selectionBars[selectionBars.length-1];
@@ -591,6 +626,7 @@
         );
 
         var e = bP.currentBars().histogramBars.filter(function(d){ return d.part==part && d.elements[0].key==selection.elements[0].key; })[0]; //get selected bar from current bars
+
         // if selected item is in grouped histogram bar
         if(ext){
           var v = 0;
@@ -603,19 +639,36 @@
         }
         var yh1 = 0;
         var yh2 = 0;
+
+        var totalSum = 0;
+        var primaryKey = "";
+
+        if (e.elements.length > 1) {
+          var separator = "";
+
+          e.elements.forEach(function (d) {
+            totalSum += d.value;
+            primaryKey += separator + d.key;
+            separator = ", ";
+          });
+        } else {
+          totalSum = e.elements[0].value;
+          primaryKey = e.elements[0].key;
+        }
+
         selectionBars.forEach(function(d){
-          yh2 += (e.height*d.sum)/e.elements[0].value;
+          yh2 += (e.height*d.sum)/totalSum;
           selectionEdges.push({
             // path:edgeVert(d.x+d.dx,d.y+d.dy, e.x+e.dx+e.width,e.y+e.dy, e.x+e.dx+e.width,e.y+e.dy+e.height, d.x+d.dx,d.y+d.dy+d.height)
             path: (part=="primary") ?
                   edgeVert(d.x+d.dx,d.y+d.dy, e.x+e.dx+e.width,e.y+e.dy+yh1, e.x+e.dx+e.width,e.y+e.dy+yh2, d.x+d.dx,d.y+d.dy+d.height) :
                   edgeVert(d.x+d.dx+d.width,d.y+d.dy, e.x+e.dx,e.y+e.dy+yh1, e.x+e.dx,e.y+e.dy+yh2, d.x+d.dx+d.width,d.y+d.dy+d.height)
             ,sum: d.sum
-            ,totalSum: e.elements[0].value
-            ,primary: (part=="primary") ? selection.elements[0].key : d.other
-            ,secondary: (part=="primary") ? d.other : selection.elements[0].key
+            ,totalSum: totalSum
+            ,primary: (part=="primary") ? primaryKey : d.other
+            ,secondary: (part=="primary") ? d.other : primaryKey
           });
-          yh1 += (e.height*d.sum)/e.elements[0].value;
+          yh1 += (e.height*d.sum)/totalSum;
         });
 
         selectionBars.push(e);

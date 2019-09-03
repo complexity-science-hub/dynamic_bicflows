@@ -61,7 +61,7 @@ function sankey(data){
       .on("mousemove", mouseoverHistogram)
       .on("mouseout", mouseoutHistogramLabel)
       .on("mouseover", function(d){ if(d.elements.length == 1) mouseoverHistogramLabel(d) })
-      .on("click",function(d){ if(d.elements.length == 1){ selectedHistogram = selectedHistogram ? false : d; mouseoverHistogramLabel(d); updateTableSelection(); }})
+      .on("click",function(d){ if(d.elements.length >= 1){ selectedHistogram = selectedHistogram ? false : d; mouseoverHistogramLabel(d); updateTableSelection(); }})
       .on("dblclick", function(d){ if(d.elements.length == 1) invokeTableSelection(d) });
 
     g.selectAll(".histogramBars").select(".label").transition().duration(500)
@@ -140,8 +140,8 @@ function sankey(data){
     .on("mousemove", mouseoverHistogram)
     // .on("mouseout", mouseoutHistogram)
     .on("mouseout", mouseoutHistogramLabel)
-    .on("mouseover", function(d){ if(d.elements.length == 1) mouseoverHistogramLabel(d) })
-    .on("click",function(d){ if(d.elements.length == 1){ selectedHistogram = selectedHistogram ? false : d; mouseoverHistogramLabel(d); updateTableSelection(); }})
+    .on("mouseover", function(d){ if(d.elements.length > 0) mouseoverHistogramLabel(d) })
+    .on("click",function(d){ if(d.elements.length >= 1){ selectedHistogram = selectedHistogram ? false : d; mouseoverHistogramLabel(d); updateTableSelection(); }})
     .on("dblclick", function(d){ if(d.elements.length == 1) invokeTableSelection(d) });
 
   g.selectAll(".histogramBars").append("text").attr("class","label")
@@ -326,7 +326,13 @@ function sankey(data){
     var orgs;
     var sum;
     if(d.part == "primary"){
-      firstGroupDim.filter(d.elements[0].key);
+      //firstGroupDim.filter(d.elements[0].key);
+      var filterFirst = [];
+      d.elements.forEach(function(e) {
+        filterFirst.push(e.key);
+      });
+
+      firstGroupDim.filter(function(d) {return filterFirst.includes(d)});
 
       var mList = {};
       bp.histogramData().entries().forEach(function(e){
@@ -338,10 +344,11 @@ function sankey(data){
       mList = d3.map(mList);
 
       secondGroupDim.filterFunction(function(e){ return mList.has(e); });
+
       orgs = d3.nest()
         .key(function(e) { return getSecond(e); })
         .rollup(function(e) { return d3.sum(e, function(f){ if(getValue(f) >= 1) return getValue(f);}); })
-        .entries(secondGroupDim.top(Infinity))
+        .entries(secondGroupDim.top(Infinity));
 
       bp.showOverlay(d, orgs, d.part);
       sum = d3.sum(orgs, function(e){ return e.value });
@@ -350,7 +357,14 @@ function sankey(data){
       secondGroupDim.filterAll();
     }
     else{
-      secondGroupDim.filter(d.elements[0].key);
+      //secondGroupDim.filter(d.elements[0].key);
+
+      var filterSecond = [];
+      d.elements.forEach(function(e) {
+        filterSecond.push(e.key);
+      });
+
+      secondGroupDim.filter(function(d) {return filterSecond.includes(d)});
 
       var mList = {};
       bp.histogramData().entries().forEach(function(e){
@@ -423,7 +437,23 @@ function sankey(data){
       .style("fill-opacity", 0.025)
       .style("pointer-events", "none");
 
-    if((!mouseoverMainBar || selected) && d3.event != null) updateToolTip(d3.event, d.elements[0].key, format(d.elements[0].value)); //format(sum)
+    if((!mouseoverMainBar || selected) && d3.event != null) {
+      if (d.elements.length == 1) {
+        updateToolTip(d3.event, d.elements[0].key, format(d.elements[0].value));
+      } else if (d.elements.length > 1) {
+        var title = "";
+        var value = 0;
+        var separator = "";
+
+        d.elements.forEach(function(element) {
+          title += separator + element.key;
+          separator = ", ";
+
+          value += element.value;
+        });
+        updateToolTip(d3.event, title, format(value));
+      }
+    } //format(sum)
   }
 
   function mouseoutHistogramLabel(d){
@@ -540,8 +570,8 @@ function sankey(data){
     g.selectAll(".histogramBars").select("rect")
       .on("mousemove", mouseoverHistogram)
       .on("mouseout", mouseoutHistogramLabel)
-      .on("mouseover", function(d){ if(d.elements.length == 1) mouseoverHistogramLabel(d) })
-      .on("click",function(d){ if(d.elements.length == 1){ selectedHistogram = selectedHistogram ? false : d; mouseoverHistogramLabel(d); updateTableSelection(); }})
+      .on("mouseover", function(d){ if(d.elements.length > 0) mouseoverHistogramLabel(d) })
+      .on("click",function(d){ if(d.elements.length >= 1){ selectedHistogram = selectedHistogram ? false : d; mouseoverHistogramLabel(d); updateTableSelection(); }})
       .on("dblclick", function(d){ if(d.elements.length == 1) invokeTableSelection(d) });
   }
 
