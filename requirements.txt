@@ -1,4 +1,4 @@
-Flask==0.12.2
+Flask==1.0
 Flask-RESTful==0.3.6
 Flask-Script==2.0.5
 pandas==0.25.0
